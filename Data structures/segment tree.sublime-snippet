@@ -1,0 +1,52 @@
+<snippet>
+	<content><![CDATA[
+template <class S> struct segtree{
+    vector<S> a; int N = 1; 
+    const int sz; const S e; 
+    const function<S(S,S)> com;
+    
+    segtree(const vector<S> x, const S id, const function<S(S, S)> COM): sz(x.size()), e(id), com(COM){
+        while(N < x.size()) N <<= 1; a = vector<S>(N+N, e);
+        for(int i = 0; i < sz; ++i) a[i+N] = x[i];
+        for(int i = N - 1; i; --i) a[i] = com(a[i<<1], a[i<<1|1]);
+    }
+    void up(int i, const S x){
+        assert(i > -1 and i < N), a[i += N] = x;
+        while(i /= 2) a[i] = com(a[i<<1], a[i<<1|1]);
+    }
+    S qu(int l, int r){
+        assert(l <= r and l > -1 and r <= sz); S zl = e, zr = e; 
+        if(l == 0 and r == sz) return a[1]; if(r == l+1) return a[l+N];
+        for(l += N, r += N; l < r; l>>=1, r>>=1){
+            if(l&1) zl = com(zl, a[l++]); if(r&1) zr = com(a[--r], zr);
+        }   return com(zl, zr);
+    }
+
+    // First j in [l, sz] such that f(com[l, j)) is FALSE
+    int max_right(int l, const function<bool(S)> f){
+        assert(l > -1 and l <= sz and f(e)); 
+        if(l == sz) return l; S prev = e, t = e; l += N;
+        do{ while(l % 2 == 0) l >>= 1; if(!f(com(prev, a[l]))){
+                while(l < N) if(f(t = com(prev, a[l<<=1]))) prev = t, l++;
+                return l - N;
+            }   prev = com(prev, a[l++]);
+          } while((l & -l) != l); return sz;
+    }
+
+    // First j in [0, r] such that f(com[j, r)) is TRUE
+    int min_left(int r, const function<bool(S)> f){
+        assert(r > -1 and r <= sz and f(e));
+        if(r == 0) return r; S last = e, t = e; r += N;
+        do{ r--; while(r > 1 and r % 2) r >>= 1; if(!f(com(a[r], last))){
+                while(r < N) if(f(t = com(a[r = r+r+1], last))) last = t, r--;
+                return r + 1 - N;
+            }   last = com(a[r], last);
+          } while((r & -r) != r); return 0;
+    }
+};
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>isegtree</tabTrigger>
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<!-- <scope>source.python</scope> -->
+</snippet>

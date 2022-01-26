@@ -1,0 +1,44 @@
+<snippet>
+	<content><![CDATA[
+struct LCT{
+    const bool B;
+    struct line : pair<int64_t, int64_t>{ 
+        int64_t operator[] (int64_t a){ return (a * first + second); }
+        void operator= (const pair<int64_t, int64_t>& x){ first = x.first, second = x.second; }
+    }e;
+    bool F(int64_t x, line X, line Y){ return B^(X[x] < Y[x]); }
+
+    struct chash {
+        size_t operator()(uint64_t x) const { // copied this from here: http://xorshift.di.unimi.it/splitmix64.c
+            static const uint64_t FIXED_RNDM = chrono::steady_clock::now().time_since_epoch().count();
+            x += FIXED_RNDM, x += 0x963779c97f4aac15, x = (x ^ (x >> 30)) * 0xbf58476d2ce4e5b9, x = (x ^ (x >> 27)) * 0x94d149bb133111ab; return x ^ (x >> 31); }
+    };  unordered_map<int64_t, line, chash> a;
+    const int64_t L, R;
+
+    line read(int64_t i) { return a.find(i) == a.end()? e: a[i]; }
+
+    LCT(const int64_t l, const int64_t r, const bool MAX_TYPE): L(l), R(r), B(MAX_TYPE){
+        e = pair(0ll, inf*(B?-1:1));
+    }
+
+    line x = e;
+    void up(pair<int64_t, int64_t> X){ x = X; up(1, L, R); }
+    void up(int64_t i, int64_t l, int64_t r){
+        line c = read(i); int64_t h = F(l, x, c) + F(r-1, x, c), m = (r+l)/2;
+        if(h == 1) up(i+i, l, m), up(i+i+1, m, r); else if(h == 2) a[i] = x;
+    }
+
+    int64_t qu(int64_t t){
+        x = e; int64_t i = 1, l = L, r = R; while(1){
+            line c = read(i); int64_t m = (l+r)/2; if(F(t, c, x)) x = c;
+            if(r-1 == l) break; if(m > t) i += i, r = m; else i += i+1, l = m;
+        }
+        return x[t];
+    }
+};
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>iLCT</tabTrigger> 
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<!-- <scope>source.python</scope> -->
+</snippet>

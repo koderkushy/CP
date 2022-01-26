@@ -1,0 +1,24 @@
+<snippet>
+	<content><![CDATA[
+template<class Node, class Comb>
+struct sparse{
+    vector<vector<Node>> sp;
+    vector<int> log;
+    const Comb f; const int N;
+    explicit sparse(const vector<Node>& x, const Comb& _f): N(x.size()), f(_f) {
+        log = vector(N+1, -1);
+        for(int i = 1; i <= N; log[i] = log[i-1] + (i == (i&-i)), i++);
+        sp = vector(log[N]+2, x);
+        for(int i = 1, bin = 1; bin < N; i++, bin <<= 1) for(int j = 0; j + bin < N; j++)
+                sp[i][j] = f(sp[i-1][j], sp[i-1][j+bin]);
+    }
+    Node ask(const int l, const int r) {
+        const int i = log[r-l]; return f(sp[i][l], sp[i][r-(1<<i)]);
+    }
+};
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>isparse</tabTrigger>
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<!-- <scope>source.python</scope> -->
+</snippet>

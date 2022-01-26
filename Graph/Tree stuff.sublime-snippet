@@ -1,0 +1,64 @@
+<snippet>
+	<content><![CDATA[
+struct tree{
+    vector<vector<int>> g, par;
+    vector<int> h, eu;
+    vector<pii> lr;
+    const int N;
+    int log = 1;
+
+    void lca__init_(const int rt = 1){
+        h = vector(N+1, -1), par = vector(log, vector(N+1, 0));
+        queue<int> q; h[rt] = 0; q.push(rt);
+        while(q.size()){
+            int u = q.front(); q.pop(); for(int v: g[u]) if(h[v] == -1)
+                h[v] = h[u] + 1, par[0][v] = u, q.push(v);
+        }
+        for(int i = 1; i < log; i++) for(int j = 1; j <= N; j++)
+                par[i][j] = par[i-1][par[i-1][j]];
+    }
+    void eutour__init_(const int rt = 1){
+        lr = vector(N+1, pii(0, 0));
+        auto dfs = [&](int u, int p, auto&& dfs) -> void {
+            int l = eu.size(); eu.pb(u);
+            for(int v: g[u]) if(v!=p) dfs(v, u, dfs);
+            lr[u] = pii(l, eu.size()), eu.pb(u);
+        }; dfs(rt, -1, dfs);
+    }
+
+    tree(const int sz, const int root = 1): N(sz){
+        for(int i = 1; i < N; i <<= 1, log++);
+        g = vector(N+1, vector(0, 0));
+
+        for(int i = 2, x, y; i <= N; i++){
+            // cin >> x >> y; g[x].pb(y), g[y].pb(x);
+            cin >> x; g[x].pb(i);
+        }
+        lca__init_(1);
+    }
+
+    int lca(const int cx, const int cy){
+        int x = cx, y = cy;
+        if(h[x] < h[y]) swap(x,y);
+
+        int delta = h[x] - h[y], i = 0;
+        while(delta){
+            if(delta&1) x = par[i][x];
+            delta >>= 1, i++;
+        }
+
+        for(i = log-1; i>=0; i--){
+            if(par[i][x] != par[i][y])
+                x=par[i][x], y=par[i][y];
+        }
+        int lca = (x!=y)? par[0][x]: x;
+        return lca;
+    }
+
+};
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>itree</tabTrigger> 
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<!-- <scope>source.python</scope> -->
+</snippet>

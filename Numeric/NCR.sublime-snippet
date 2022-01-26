@@ -1,0 +1,19 @@
+<snippet>
+	<content><![CDATA[
+// need mint
+vector<mint> frl, irl;
+void factorial(const int N = 1<<18){
+    frl.resize(N, 1), irl.resize(N, 1);
+    for(int i = 1; i < N; i++)
+        frl[i] = frl[i-1] * i, irl[i] = irl[i-1] / i;
+}
+
+mint ncr(int n, int r){
+    return (r>n or r<0)? 0 :frl[n] * irl[r] * irl[n-r];
+}
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>incr</tabTrigger> 
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<!-- <scope>source.python</scope> -->
+</snippet>

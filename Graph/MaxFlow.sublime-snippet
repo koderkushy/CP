@@ -1,0 +1,46 @@
+<snippet>
+	<content><![CDATA[
+struct MaxFlow {
+    int n, s, t, flow = 0;
+    vector<vector<int>> G;
+    vector<vector<lol>> C;
+    vector<int> nx, level;
+
+    MaxFlow (int _n, int _s, int _t): n(_n), s(_s), t(_t){
+        C = vector(n+1, vector(n+1, 0ll)), 
+        G = vector(n+1, vector(0, 0));
+    }
+
+    bool bfs () {
+        level = vector(n+1, 0); queue<int> q; q.push(s), level[s] = 1;
+        for(int u; q.size() and (u = q.front(), 1); q.pop())
+            for (int v: G[u]) if(C[u][v] and !level[v])
+                q.push(v), level[v] = level[u]+1;
+        return level[t];
+    }
+
+    int dfs (int u, lol mi) {
+        if(u == t) return mi;
+        for (int v, f; nx[u] < G[u].size() and (v = G[u][nx[u]], 1); nx[u]++)
+            if(C[u][v] and level[v] == level[u]+1 and (f = dfs(v, min(mi, C[u][v]))) > 0)
+                return (C[u][v] -= f, C[v][u] += f, f);
+        return 0;
+    }
+
+    void add (int u, int v, int f) {
+        G[u].pb(v), C[u][v] += f;
+    }
+
+    void Dinic () {
+        while (bfs()) {
+            int D; nx = vector(n+1, 0);
+            do  D = dfs(s, 1ll<<62); while (flow += D, D);
+        }
+    }
+};
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>imaxflow</tabTrigger>
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<!-- <scope>source.python</scope> -->
+</snippet>

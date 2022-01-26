@@ -1,0 +1,27 @@
+<snippet>
+	<content><![CDATA[
+struct idsu{
+    vector<int> dsu;
+
+    idsu(int n): dsu(n+1, -1){}
+
+    int par(int x){
+        if(dsu[x] < 0) return x;
+        return dsu[x] = par(dsu[x]);
+    }
+
+    int unite(int x, int y){
+        int px = par(x), py = par(y);
+        if(px == py) return 0;
+        if(dsu[px] > dsu[py]) 
+            swap(px, py);
+        dsu[px] += dsu[py], dsu[py] = px;
+        return px;
+    }
+};
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>idsu</tabTrigger> 
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<!-- <scope>source.python</scope> -->
+</snippet>

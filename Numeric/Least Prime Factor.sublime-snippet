@@ -1,0 +1,20 @@
+<snippet>
+	<content><![CDATA[
+vector lpf(N, 0), mul(N, 0);
+
+void ilpf(){
+    lpf[1] = 1;
+    for(lol i = 2; i < N; ++i){
+        if(lpf[i]) continue;
+        lpf[i] = i, mul[i] = 1;
+        for(lol j = i*i; j < N; j += i) 
+            if(!lpf[j]) 
+                lpf[j] = i, mul[j] = 1+mul[j/i];
+    }
+}
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>ilpf</tabTrigger> 
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<!-- <scope>source.python</scope> -->
+</snippet>

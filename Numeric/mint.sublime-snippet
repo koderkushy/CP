@@ -1,0 +1,53 @@
+<snippet>
+	<content><![CDATA[
+
+const int MOD = 998244353;
+struct mint {
+    int val;
+    mint(long long v = 0) { if (v < 0) v = v % MOD + MOD; if (v >= MOD) v %= MOD; val = v; }
+    static int mod_inv(int a, int m = MOD) {
+        int g = m, r = a, x = 0, y = 1, q;
+        while (r != 0) q = g / r, g %= r, swap(g, r), x -= q * y, swap(x, y);
+        return x < 0 ? x + m : x;
+    } 
+    explicit operator int() const { return val; }
+    mint& operator+=(const mint &o) { val += o.val; if (val >= MOD) val -= MOD; return *this; }
+    mint& operator-=(const mint &o) { val -= o.val; if (val < 0) val += MOD; return *this; }
+    static unsigned fast_mod(uint64_t x, unsigned m = MOD) {
+           #if !defined(_WIN32) || defined(_WIN64)
+                return x % m;
+           #endif
+           unsigned x_high = x >> 32, x_low = (unsigned) x; unsigned quot, rem;
+           asm("divl %4\n": "=a" (quot), "=d" (rem): "d" (x_high), "a" (x_low), "r" (m));
+           return rem;
+    }
+    mint& operator*=(const mint &other) { val = fast_mod((uint64_t) val * other.val); return *this; }
+    mint& operator/=(const mint &other) { return *this *= other.inv(); }
+    friend mint operator+(const mint &a, const mint &b) { return mint(a) += b; }
+    friend mint operator-(const mint &a, const mint &b) { return mint(a) -= b; }
+    friend mint operator*(const mint &a, const mint &b) { return mint(a) *= b; }
+    friend mint operator/(const mint &a, const mint &b) { return mint(a) /= b; }
+    mint& operator++() { val=val==MOD-1?0:val+1; return *this; }
+    mint& operator--() { val=val==0?MOD-1:val-1; return *this; }
+    mint operator++(int32_t) { mint before = *this; ++*this; return before; }
+    mint operator--(int32_t) { mint before = *this; --*this; return before; }
+    mint operator-() const { return val == 0 ? 0 : MOD - val; }
+    bool operator==(const mint &other) const { return val == other.val; }
+    bool operator!=(const mint &other) const { return val != other.val; }
+    mint inv() const { return mod_inv(val); }
+    mint operator[](long long p) {
+        assert(p >= 0);
+        mint a = *this, res = 1;
+        while (p > 0) { if (p & 1) res *= a; a *= a, p >>= 1; }
+        return res;
+    }
+    friend ostream& operator << (ostream &stream, const mint &m) { return stream << m.val; }
+    friend istream& operator >> (istream &stream, mint &m) { return stream>>m.val; } 
+};
+
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	 <tabTrigger>imint</tabTrigger> 
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<!-- <scope>source.python</scope> -->
+</snippet>

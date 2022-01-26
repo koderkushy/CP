@@ -1,0 +1,32 @@
+<snippet>
+	<content><![CDATA[
+template <class S> class dsegtree{
+    const int N; const S e; const function<S(S, S)> com; vector<S> v; int len = 0;
+    struct chash {
+        size_t operator()(uint64_t x) const { // copied this from here: http://xorshift.di.unimi.it/splitmix64.c
+            static const uint64_t FIXED_RNDM = chrono::steady_clock::now().time_since_epoch().count();
+            x += FIXED_RNDM, x += 0x963779c97f4aac15, x = (x ^ (x >> 30)) * 0xbf58476d2ce4e5b9, x = (x ^ (x >> 27)) * 0x94d149bb133111ab; return x ^ (x >> 31); }
+    };  unordered_map<long long, int, chash> a;
+
+    S read(int i){ auto I = a.find(i); return I == a.end()? e: v[I -> ss]; }
+    void write(int i, S x){ auto I = a.find(i); I == a.end()? a[i] = len++, v.pb(x): (v[I -> ss] = x, (void)0); }
+public:
+    dsegtree(long long _N, S id, function<S(S, S)> COM):
+    N([](long long x){ long long y = 1; while(x) x>>=1, y<<=1; return y; }(_N)), e(id), com(COM){}
+    void up(long long i, S x){
+        assert(i > -1 and i < N), write(i += N, x);
+        while(i /= 2) write(i, com(read(i<<1), read(i<<1|1)));
+    }
+    S qu(long long l, long long r){
+        assert(l <= r and l > -1 and r <= N); S zl = e, zr = e;
+        for(l += N, r += N; l < r; l>>=1, r>>=1){
+            if(l&1) zl = com(zl, read(l++)); if(r&1) zr = com(read(--r), zr);
+        }   return com(zl, zr);
+    }
+};
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>idynsegtree</tabTrigger> 
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<!-- <scope>source.python</scope> -->
+</snippet>
