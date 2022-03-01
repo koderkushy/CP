@@ -1,7 +1,7 @@
 <snippet>
 	<content><![CDATA[
 
-const int MOD = 998244353;
+template<int MOD = 998244353>
 struct mint {
     int val;
     mint(long long v = 0) { if (v < 0) v = v % MOD + MOD; if (v >= MOD) v %= MOD; val = v; }

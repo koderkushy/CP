@@ -1,23 +1,23 @@
 <snippet>
 	<content><![CDATA[
 // need mint
-const mint rt = 961777435, it = 246144584;  // 2**23rd root of 1 under modulo 998244353.
-struct NumberTheoreticTransform {
-    vector<mint> rx, ix = rx;
-    NumberTheoreticTransform () {
-        rx = vector(24, rt), ix = vector(24, it);
+template<typename T, int rt = 961777435, int it = 246144584>
+struct NTT {
+    vector<T> rx, ix = rx;
+    NTT () {
+        rx = vector(24, T(rt)), ix = vector(24, T(it));
         for(int i = 1; i < 24; i++) 
             rx[i] = rx[i-1] * rx[i-1], 
             ix[i] = ix[i-1] * ix[i-1];
     }
-    void fft (vector<mint> &a, const bool invert = false) {
+    void fft (vector<T> &a, const bool invert = false) {
         const int N = a.size();
         for(int i = 1, j = 0; i < N; i++){
             int b = N>>1; while(b&j) j ^= b, b >>= 1;
             j ^= b; if(j > i) swap(a[i], a[j]);
         }
-        mint X = 1, in = mint(N).inv();
-        vector<mint> &x = invert? ix: rx;
+        T X = 1, in = T(N).inv();
+        vector<T> &x = invert? ix: rx;
  
         for(int l = 1, p = 22; l < N; l<<=1, p--)
             for(int s = 0; s < N; s += l+l, X = 1)
@@ -29,7 +29,7 @@ struct NumberTheoreticTransform {
     }
  
     // In-place multiply modulo x^(MAX)
-    void mul (vector<mint>& a, vector<mint>& b, const int MAX = 0){
+    void mul (vector<T>& a, vector<T>& b, const int MAX = 0){
         if(MAX and MAX < a.size()) a.resize(MAX);
         if(MAX and MAX < b.size()) b.resize(MAX);
  
@@ -44,7 +44,7 @@ struct NumberTheoreticTransform {
     }
  
     // divide and conquer
-    void mul (vector<vector<mint>>& a, const int MAX = 0){
+    void mul (vector<vector<T>>& a, const int MAX = 0){
         auto cmp = [&](int i, int j){ return a[i].size() > a[j].size(); };
         priority_queue<int, vector<int>, decltype(cmp)> p(cmp);
         for(int i = 0; i < a.size(); i++) p.push(i);
@@ -54,7 +54,7 @@ struct NumberTheoreticTransform {
         }
         a = {a[p.top()]};
     }
-} NTT;
+};
 ]]></content>
 	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
 	<tabTrigger>intt</tabTrigger> 

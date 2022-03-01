@@ -1,58 +1,75 @@
 <snippet>
 	<content><![CDATA[
-struct tree{
-    vector<vector<int>> g, par;
-    vector<int> h, eu;
-    vector<pii> lr;
-    const int N;
-    int log = 1;
+struct tree {
+    vector<vector<int>> g;
+    vector<int> h; // number of edges from root
+    int N, t;
 
-    void lca__init_(const int rt = 1){
-        h = vector(N+1, -1), par = vector(log, vector(N+1, 0));
-        queue<int> q; h[rt] = 0; q.push(rt);
-        while(q.size()){
-            int u = q.front(); q.pop(); for(int v: g[u]) if(h[v] == -1)
-                h[v] = h[u] + 1, par[0][v] = u, q.push(v);
-        }
-        for(int i = 1; i < log; i++) for(int j = 1; j <= N; j++)
-                par[i][j] = par[i-1][par[i-1][j]];
-    }
-    void eutour__init_(const int rt = 1){
-        lr = vector(N+1, pii(0, 0));
-        auto dfs = [&](int u, int p, auto&& dfs) -> void {
-            int l = eu.size(); eu.pb(u);
-            for(int v: g[u]) if(v!=p) dfs(v, u, dfs);
-            lr[u] = pii(l, eu.size()), eu.pb(u);
-        }; dfs(rt, -1, dfs);
+    void dep_dfs (int u, int p) {
+        for(int v: g[u]) if(v != p)
+            h[v] = h[u]+1, dep_dfs(v, u);
     }
 
-    tree(const int sz, const int root = 1): N(sz){
-        for(int i = 1; i < N; i <<= 1, log++);
-        g = vector(N+1, vector(0, 0));
-
-        for(int i = 2, x, y; i <= N; i++){
-            // cin >> x >> y; g[x].pb(y), g[y].pb(x);
-            cin >> x; g[x].pb(i);
+    // LCA
+        vector<vector<int>> up;
+        // up[i][x] = (1<<x)th parent of i
+        int LOG;
+        void lca_dfs (int u, int p) {
+            up[u][0] = p;
+            for(int v: g[u]) if(v != p)
+                lca_dfs(v, u);
         }
-        lca__init_(1);
-    }
-
-    int lca(const int cx, const int cy){
-        int x = cx, y = cy;
-        if(h[x] < h[y]) swap(x,y);
-
-        int delta = h[x] - h[y], i = 0;
-        while(delta){
-            if(delta&1) x = par[i][x];
-            delta >>= 1, i++;
+        void lca_init (const int root = 1) {
+            LOG = ceil(log(N)/log(2));
+            up = vector(N+1, vector(LOG, 0)), lca_dfs(root, 0);
+            if(h.empty())
+                h = vector(N+1, 0), dep_dfs(root, -1);
+            for (int x = 1; x < LOG; x++) for (int i = 0; i <= N; i++)
+                up[i][x] = up[up[i][x-1]][x-1];
+        }
+        int lcaof (int x, int y) {
+            if(h[x] < h[y]) swap(x, y);
+            for(int d = h[x] - h[y], i = 0; d; d >>= 1, i++)
+                if(d & 1) x = up[x][i];
+            for(int i = LOG - 1; i >= 0; i--){
+                if(up[x][i] != up[y][i])
+                    x = up[x][i], y = up[y][i];
+            }
+            return (x != y)? up[x][0]: x;
         }
 
-        for(i = log-1; i>=0; i--){
-            if(par[i][x] != par[i][y])
-                x=par[i][x], y=par[i][y];
+    // Euler tour and HLD
+        vector<int> sz, in, out, nx;
+        // [in, out) - subtree, [in[nx], in] - ascending heavy path. adamant orz.
+        void sz_dfs (int u, int p) {
+            sz[u] = 1;
+            for(int v: g[u]) if(v != p){
+                sz_dfs(v, u), sz[u] += sz[v];
+                // if(sz[v] > sz[g[u][0]]) swap(v, g[u][0]);
+            }
         }
-        int lca = (x!=y)? par[0][x]: x;
-        return lca;
+        void eul_dfs (int u, int p) {
+            in[u] = t++;
+            for(int v: g[u]) if(v != p)
+                // nx[v] = (v == g[u][0]? nx[u]: v),
+                eul_dfs(v, u);
+            out[u] = t;
+        }
+        void eul_init (const int root = 1) {
+            in.resize(N+1), out = in;
+            // sz = nx = in;
+            t = 0, eul_dfs(root, -1);
+        }
+
+    tree () { cin >> N, tree(N); }
+    tree (const int n): N(n) {
+        g.resize(N+1);
+        for (int i = 2, u, p; i <= n; i++){
+            cin >> u >> p, g[u].pb(p), g[p].pb(u);
+            // cin >> p, g[p].pb(i);
+        }
+        lca_init();
+        // eul_init();
     }
 
 };
