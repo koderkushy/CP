@@ -1,22 +1,30 @@
 <snippet>
 	<content><![CDATA[
-struct idsu{
-    vector<int> dsu;
+struct dsu{
+    vector<int> z;
 
-    idsu(int n): dsu(n+1, -1){}
+    dsu(int n): z(n, -1) {}
 
     int par(int x){
-        if(dsu[x] < 0) return x;
-        return dsu[x] = par(dsu[x]);
+        if(z[x] < 0) return x;
+        return z[x] = par(z[x]);
     }
 
-    int unite(int x, int y){
+    bool unite(int x, int y){
         int px = par(x), py = par(y);
-        if(px == py) return 0;
-        if(dsu[px] > dsu[py]) 
+        if(px == py) return false;
+        if(z[px] > z[py]) 
             swap(px, py);
-        dsu[px] += dsu[py], dsu[py] = px;
-        return px;
+        z[px] += z[py], z[py] = px;
+        return true;
+    }
+
+    bool same(const int x, const int y) {
+        return par(x) == par(y);
+    }
+
+    int size(const int x) {
+        return -z[par(x)];
     }
 };
 ]]></content>

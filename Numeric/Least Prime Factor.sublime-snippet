@@ -1,15 +1,16 @@
 <snippet>
 	<content><![CDATA[
-vector lpf(N, 0), mul(N, 0);
+vector<int> lpf, mul, primes;
 
-void ilpf(){
-    lpf[1] = 1;
-    for(lol i = 2; i < N; ++i){
-        if(lpf[i]) continue;
-        lpf[i] = i, mul[i] = 1;
-        for(lol j = i*i; j < N; j += i) 
-            if(!lpf[j]) 
-                lpf[j] = i, mul[j] = 1+mul[j/i];
+void lpf_linear(const int N = 1<<18){
+    lpf = mul = vector(N, 0);
+    for (int i = 2; i < N; i++) {
+        if (lpf[i] == 0)
+            lpf[i] = i, mul[i] = 1, primes.pb(i);
+        for (int p: primes) {
+            if(p > lpf[i] or p * i > N) break;
+            lpf[p * i] = p, mul[p * i] = 1 + (p == lpf[i]? mul[i]: 0);
+        }
     }
 }
 ]]></content>
