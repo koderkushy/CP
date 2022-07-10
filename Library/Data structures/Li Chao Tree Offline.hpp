@@ -1,5 +1,5 @@
-// Usage: https://judge.yosupo.jp/submission/95113
-template<typename int64_t, typename uint, int64_t INF, bool FLIP = false>
+// Usage: https://judge.yosupo.jp/submission/95173
+template<typename int64_t, typename uint, bool FLIP = false>
 struct LiChaoTreeOffline {
     struct Line {
         int64_t m, c;
@@ -12,8 +12,8 @@ struct LiChaoTreeOffline {
         inline void operator= (uint i) { l = r = i; }
     };
     
-    int sz, N;
-    std::vector<Node> a;
+    static constexpr int64_t INF = std::numeric_limits<int64_t>::max();
+    int sz, N; std::vector<Node> a;
 
     template<class Iter>
     LiChaoTreeOffline (const Iter L, const Iter R)
@@ -45,8 +45,7 @@ struct LiChaoTreeOffline {
     }
 
     void up (int64_t m, int64_t c, int j) {
-        Line x(m, c);
-        if constexpr (FLIP) x = Line(-m, -c);
+        Line x = [&](){ if constexpr (FLIP) return Line(-m, -c); else return Line(m, c); }();
         int64_t c_l = x(a[j].l), c_r = x(a[j].r);
         while (true) {
             Line& z = a[j].z;
