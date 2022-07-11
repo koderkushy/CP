@@ -14,28 +14,4 @@ Competitive Programming snippets used by me
   - Lazy segtree
     - [Range affine, range sum](https://judge.yosupo.jp/submission/95360)
 
-<details>
-  <summary> Data structures </summary>
-  
-  <details>
-    <summary> Segtree </summary>
-    
-    <details>
-      <summary> Deeper </summary>
-      
-      hahaha
-      
-    </details>
-    
-    - Segment tree - 
-    - Lazy Segtree -
-    - Sparse Segtree - 
-    
-  </details>
-  
-  - Disjoint sets - 
-  - Fast RMQ -
-  - Li Chao Tree -
-  - Li Chao Tree offline -
-  
 </details>
