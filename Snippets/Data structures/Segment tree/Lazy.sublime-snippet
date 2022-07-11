@@ -1,70 +1,71 @@
 <snippet>
 	<content><![CDATA[
-// Needs Segtree
-template <class Node, class Lazy, class Ncom, class Lcom, class Appl>
-struct LazyTree : public Segtree<Node, Ncom> {
+// Needs Normalized Segtree
+// Usage: https://codeforces.com/edu/course/2/lesson/5/4/practice/contest/280801/submission/163684450
+template <class Node, class Lazy, class MergeNode, class MergeLazy, class ApplyLazy>
+struct LazyTree : public Segtree<Node, MergeNode, true> {
+    using Segtree = Segtree<Node, MergeNode, true>; using Segtree::N; using Segtree::id; using Segtree::a; using Segtree::F; using Segtree::update;
+    template<typename U> using Vec = std::vector<U>;
 
-    using ST = Segtree<Node, Ncom>;
-
-    const int& N = ST::N;
-    const Node& node_id = ST::identity;
-    vector<Node>& a = ST::a;
-    const Ncom& node_com = ST::com;
-
-    const int logN;
-    vector<Lazy> b;
-    const Lcom lazy_com;
-    const Appl apply_lazy;
-    const Lazy lazy_id;
- 
-    template <typename... T>
+    const int       logN;
+    Vec<Lazy>       b;
+    const MergeLazy L;
+    const ApplyLazy A;
+    const Lazy      lazy_id;
+    
+    template<typename... T>
     explicit LazyTree (const int n, const Node& nid, T... args)
-        : LazyTree(vector(n, nid), args...) {}
-    explicit LazyTree (const vector<Node>& x,
+        : LazyTree(std::vector(n, nid), nid, args...) {}
+
+    explicit LazyTree (const Vec<Node>& x,
                        const Node& nid,
                        const Lazy& lid,
-                       const Ncom& ncom,
-                       const Lcom& lcom,
-                       const Appl& appl)
-        : lazy_id(lid), lazy_com(lcom), apply_lazy(appl),
-          logN(32 - __builtin_clz(x.size() - 1)), ST (x, nid, ncom) {
-        b = vector(N, lazy_id);
+                       const MergeNode& ncom,
+                       const MergeLazy& lcom,
+                       const ApplyLazy& appl)
+        : lazy_id(lid), L(lcom), A(appl),
+          logN(32 - __builtin_clz(x.size() - 1)), Segtree (x, nid, ncom) {
+        b.assign(N, lazy_id);
     }
 
-    void combine (const int i) { a[i] = node_com(a[i<<1], a[i<<1|1]); }
-    void r_apply (const int i, const Lazy u) {
-        a[i] = apply_lazy(a[i], u); if(i < N) b[i] = lazy_com(b[i], u);
+    inline void apply_all (const int i, const Lazy u) {
+        a[i] = A(a[i], u); if(i < N) b[i] = L(b[i], u);
     }
-    void push (const int i) {
-        r_apply(i<<1, b[i]), r_apply(i<<1|1, b[i]); b[i] = lazy_id;
+
+    inline void pull (int x) {
+        static int C[30], i = 0;
+        while (x >>= 1) C[++i] = x;
+        while (i) apply_all(C[i]<<1, b[C[i]]), apply_all(C[i]<<1|1, b[C[i]]), b[C[i]] = lazy_id, i--;
     }
 
     void up (int l, int r, const Lazy x) {
         assert(0 <= l and l <= r and r <= N);
         l += N, r += N; if(l == r) return;
         const int lctz = __builtin_ctz(l), rctz = __builtin_ctz(r);
-        for(int j = logN; j > lctz; --j) push(l >> j);
-        for(int j = logN; j > rctz; --j) push((r-1) >> j);
+        const int opt = std::min(lctz, rctz);
+        pull(l >>= opt), pull((r >>= opt) - 1);
         for(int p = l, q = r; p < q; p >>= 1, q >>= 1){
-            if(p&1) r_apply(p++, x); if(q&1) r_apply(--q, x);
+            if(p&1) apply_all(p++, x); if(q&1) apply_all(--q, x);
         }
-        for (int i = lctz + 1; i <= logN; ++i) combine(l >> i);
-        for (int i = rctz + 1; i <= logN; ++i) combine((r - 1) >> i);
+        l >>= lctz - opt; --r >>= rctz - opt; 
+        while (l >>= 1) update(l);
+        while (r >>= 1) update(r);
     }
 
     Node qu (int l, int r) {
         assert(0 <= l and l <= r and r <= N), l += N, r += N; 
-        if(l == r) return node_id; if(r-l == N) return a[1];
+        if(l == r) return id; if(r-l == N) return a[1];
         const int lctz = __builtin_ctz(l), rctz = __builtin_ctz(r);
-        for(int j = logN; j > lctz; --j) push(l >> j);
-        for(int j = logN; j > rctz; --j) push((r-1) >> j);
-        Node zl = node_id, zr = node_id; for(; l < r; l >>= 1, r >>= 1){
-            if(l&1) zl = node_com(zl, a[l++]); if(r&1) zr = node_com(a[--r], zr);
-        } return node_com(zl, zr);
+        const int opt = std::min(lctz, rctz);
+        pull(l >>= opt), pull((r >>= opt) - 1);
+        Node zl = id, zr = id;
+        for(; l < r; l >>= 1, r >>= 1){
+            if(l&1) zl = F(zl, a[l++]);
+            if(r&1) zr = F(a[--r], zr);
+        }
+        return F(zl, zr);
     }
 };
-
-
 ]]></content>
 	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
 	<tabTrigger>ilazytree</tabTrigger>

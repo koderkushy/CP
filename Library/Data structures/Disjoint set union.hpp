@@ -1,3 +1,4 @@
+// Usage: https://judge.yosupo.jp/submission/95195
 struct DSU{
     int *z;
     DSU(int n): z(new int [n]) { std::fill(z, z+n, -1); }
