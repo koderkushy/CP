@@ -41,7 +41,7 @@ struct LazyTree {
         if (r - l == sz) return ask_all();
         if (l == r) return id;
 
-        l += N, r += N;
+        l |= N, r |= N;
         const int lctz = __builtin_ctz(l), rctz = __builtin_ctz(r), opt = std::min(lctz, rctz);
         pull_pair(l >>= opt, (r >>= opt) - 1);
         
@@ -64,7 +64,7 @@ struct LazyTree {
         if constexpr (SafeMode) assert(0 <= l and l <= r and r <= sz);
         if (l == r) return;
 
-        l += N, r += N;
+        l |= N, r |= N;
         const int lctz = __builtin_ctz(l), rctz = __builtin_ctz(r), opt = std::min(lctz, rctz);
         pull_pair(l >>= opt, (r >>= opt) - 1);
 
