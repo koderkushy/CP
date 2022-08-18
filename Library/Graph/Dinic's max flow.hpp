@@ -1,60 +1,103 @@
-#pragma once
+template<class uint>
+struct DinicsMaxflow {
 
-struct MaxFlow {
-    int64_t n, s, t, flow = 0;
-    vector<vector<int>> G;
-    vector<vector<int64_t>> C;
-    vector<int> nx, level;
- 
-    MaxFlow (int _n, int _s, int _t): n(_n), s(_s), t(_t){
-        C = vector(n+1, vector(n+1, int64_t())), 
-        G = vector(n+1, vector(0, 0));
+    DinicsMaxflow (int n, int s, int t)
+    : n(n), source(s), sink(t), C(n, std::vector(n, zero)), adj(n), level(n), next(n) {
+        assert(s < n and s > -1 and t < n and t > -1 and s != t);
     }
- 
-    void add (int u, int v, int f) {
-        G[u].pb(v), G[v].pb(u), C[u][v] += f;
+
+    void add (int u, int v, uint f) {
+        assert(std::min(u, v) > -1 and std::max(u, v) < n);
+        C[u][v] += f;
+        adj[u].emplace_back(v), adj[v].emplace_back(u);
     }
- 
-    void Dinic () {
-        for (auto &g: G)
-            sort(all(g)), g.resize(unique(all(g)) - g.begin());
- 
-        auto bfs = [&]() {
-            level = vector(n+1, 0);
-            queue<int> q;
-            q.push(s), level[s] = 1;
 
-            while (q.size()) {
-                int u = q.front(); q.pop();
-                for (int v: G[u]) if (C[u][v] > 0 and level[v] == 0)
-                    level[v] = 1 + level[u], q.push(v);
-            }
+    void reset () {
+        for (auto& v: adj) v.clear();
+        for (auto& v: C) v.assign(n, zero);
+        state = 0;
+    }
 
-            return level[t];
-        };
-    
-        auto dfs = [&](auto&& dfs, const int u, const int64_t block) -> int64_t {
-            if (u == t)
-                return block;
+    uint max_flow () {
+        static uint flow;
 
-            while (nx[u] < G[u].size()) {
-                const int& v = G[u][nx[u]];
-                int64_t f;
+        if (state) return flow;
+        else flow = 0;
+        
+        for (auto& v: adj)
+            std::sort(v.begin(), v.end()),
+            v.erase(std::unique(v.begin(), v.end()), v.end());
 
-                nx[u]++;
-
-                if (C[u][v] > 0 and level[v] == level[u] + 1 and (f = dfs(dfs, v, min (block, C[u][v]))) > 0)
-                    return C[u][v] -= f, C[v][u] += f, f;
-            }
-            
-            return 0;
-        };
-
-        while (bfs()) {
-            int64_t D; nx = vector(n+1, 0);
-            do  flow += (D = dfs (dfs, s, 1ll << 62));
-                while (D);
+        while (relabel()) {
+            std::fill(next.begin(), next.end(), 0);
+            for (uint df; (df = augment(source, INF)) > zero; )
+                flow += df;
         }
-    }
-};
 
+        state = 1;
+        return flow;
+    }
+
+    std::vector<bool> min_cut () {
+        max_flow();
+
+        std::vector<bool> cut(n);
+        for (int i = 0; i < n; i++)
+            if (level[i] == -1)
+                cut[i] = true;
+
+        return cut;
+    }
+
+  private:
+
+    static constexpr uint zero = static_cast<uint>(1e-9), INF = std::numeric_limits<uint>::max();
+
+    std::vector<std::vector<uint>> C;
+    std::vector<std::vector<int>> adj;
+    std::vector<int> level, next;
+
+    bool state = 0;
+    const int n, source, sink;
+
+    bool relabel () {
+        std::fill(level.begin(), level.end(), -1);
+        level[source] = 0;
+
+        static std::vector<int> q(n);
+        static int l, r;
+
+        q[0] = source, l = 0, r = 1;
+
+        while (l < r) {
+            int u = q[l++];
+            for (int v: adj[u]) if (C[u][v] > zero and level[v] == -1) {
+                level[v] = level[u] + 1, q[r++] = v;
+                if (v == sink)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    uint augment (const int u, const uint& block) {
+        if (u == sink)
+            return block;
+
+        while (next[u] < adj[u].size()) {
+            const int& v = adj[u][next[u]++];
+
+            if (C[u][v] <= zero or level[u] + 1 != level[v])
+                continue;
+
+            if (auto flow = augment(v, std::min(block, C[u][v])); flow > zero) {
+                C[u][v] -= flow, C[v][u] += flow;
+                return flow;
+            }
+        }
+
+        return zero;
+    }
+    
+};

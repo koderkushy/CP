@@ -1,6 +1,4 @@
-#pragma once
-
-vector<int> suff(const string &s){
+std::vector<int> suffixarray (const std::string &s){
 
     const lol n = s.size();
     vector c(n, 0), xi = c, a = c;

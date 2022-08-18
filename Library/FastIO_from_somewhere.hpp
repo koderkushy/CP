@@ -1,4 +1,4 @@
-#ifndef LOCAL
+#ifndef arling
     static const auto IOSetup = [] {
         std::cin.tie(nullptr)->sync_with_stdio(false);
         // std::cout << std::setprecision(6) << std::fixed;

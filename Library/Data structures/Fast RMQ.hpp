@@ -1,4 +1,3 @@
-// Usage: https://judge.yosupo.jp/submission/95319
 template<class int_t, bool FLIP = false>
 struct FastRMQ {
     static constexpr int THIRTYTWO = 32;

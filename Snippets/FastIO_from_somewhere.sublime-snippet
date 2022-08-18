@@ -1,6 +1,6 @@
 <snippet>
 	<content><![CDATA[
-#ifndef LOCAL
+#ifndef arling
     static const auto IOSetup = [] {
         std::cin.tie(nullptr)->sync_with_stdio(false);
         // std::cout << std::setprecision(6) << std::fixed;
@@ -52,6 +52,7 @@
     #define cin io
     #define cout io
 #endif
+
 ]]></content>
 	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
 	<tabTrigger>ifastio</tabTrigger>

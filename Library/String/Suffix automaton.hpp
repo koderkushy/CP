@@ -1,5 +1,3 @@
-#pragma once
-
 struct SuffixAutomaton {
 
     vector<int> len{0}, link{-1}, first{-1};

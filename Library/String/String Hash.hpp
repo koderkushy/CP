@@ -1,5 +1,3 @@
-#pragma once
-
 struct hstring{
     const lol hmd, b;
     vector<lol> bp, h;
