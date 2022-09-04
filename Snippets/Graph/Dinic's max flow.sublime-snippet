@@ -1,52 +1,42 @@
 <snippet>
 	<content><![CDATA[
 template<class uint>
-struct DinicsMaxflow {
+struct Dinics {
+    using edge = std::pair<int, int>;
 
-    DinicsMaxflow (int n, int s, int t)
-    : n(n), source(s), sink(t), C(n, std::vector(n, zero)), adj(n), level(n), next(n) {
-        assert(s < n and s > -1 and t < n and t > -1 and s != t);
-    }
-
-    void add (int u, int v, uint f) {
-        assert(std::min(u, v) > -1 and std::max(u, v) < n);
-        C[u][v] += f;
-        adj[u].emplace_back(v), adj[v].emplace_back(u);
-    }
-
-    void reset () {
-        for (auto& v: adj) v.clear();
-        for (auto& v: C) v.assign(n, zero);
-        state = 0;
-    }
-
-    uint max_flow () {
-        static uint flow;
-
-        if (state) return flow;
-        else flow = 0;
-        
-        for (auto& v: adj)
-            std::sort(v.begin(), v.end()),
-            v.erase(std::unique(v.begin(), v.end()), v.end());
-
-        while (relabel()) {
-            std::fill(next.begin(), next.end(), 0);
-            for (uint df; (df = augment(source, INF)) > zero; )
-                flow += df;
+    Dinics (const int n, const std::vector<std::pair<edge, uint>> &e)
+    : n(n), C(n, std::vector(n, zero)), adj(n), level(n), next(n)
+    {
+        assert(n > 1 and n < 5000);
+        for (auto [p, c]: e) {
+            auto& [u, v] = p;
+            adj[u].push_back(v),
+            adj[v].push_back(u),
+            C[u][v] += c;
         }
 
-        state = 1;
-        return flow;
+        initial = C;
+        for (auto& v: adj)
+            std::sort(v.begin(), v.end()), v.erase(std::unique(v.begin(), v.end()), v.end());
     }
 
-    std::vector<bool> min_cut () {
-        max_flow();
+    uint max_flow (const int s, const int t) {
+        static uint flow = 0;
 
-        std::vector<bool> cut(n);
+        if (source == s and sink == t)
+            return flow;
+
+        C = initial, source = s, sink = t;
+        return flow = dinics_max_flow();
+    }
+
+    std::vector<bool> min_cut (const int s, const int t) {
+        max_flow(s, t);
+
+        std::vector<bool> cut(n, true);
         for (int i = 0; i < n; i++)
-            if (level[i] == -1)
-                cut[i] = true;
+            if (~level[i])
+                cut[i] = false;         // true -> source side
 
         return cut;
     }
@@ -55,14 +45,26 @@ struct DinicsMaxflow {
 
     static constexpr uint zero = static_cast<uint>(1e-9), INF = std::numeric_limits<uint>::max();
 
-    std::vector<std::vector<uint>> C;
+    std::vector<std::vector<uint>> C, initial;
     std::vector<std::vector<int>> adj;
     std::vector<int> level, next;
 
-    bool state = 0;
-    const int n, source, sink;
+    const int n;
+    int source = -1, sink = -1;
 
-    bool relabel () {
+    uint dinics_max_flow () {
+        uint flow = 0;
+
+        while (bfs_level()) {
+            std::fill(next.begin(), next.end(), 0);
+            for (uint df; (df = dfs_augment(source, INF)) > zero; )
+                flow += df;
+        }
+
+        return flow;
+    }
+
+    bool bfs_level () {
         std::fill(level.begin(), level.end(), -1);
         level[source] = 0;
 
@@ -83,7 +85,7 @@ struct DinicsMaxflow {
         return false;
     }
 
-    uint augment (const int u, const uint& block) {
+    uint dfs_augment (const int u, const uint& block) {
         if (u == sink)
             return block;
 
@@ -93,7 +95,7 @@ struct DinicsMaxflow {
             if (C[u][v] <= zero or level[u] + 1 != level[v])
                 continue;
 
-            if (auto flow = augment(v, std::min(block, C[u][v])); flow > zero) {
+            if (auto flow = dfs_augment(v, std::min(block, C[u][v])); flow > zero) {
                 C[u][v] -= flow, C[v][u] += flow;
                 return flow;
             }
@@ -101,7 +103,6 @@ struct DinicsMaxflow {
 
         return zero;
     }
-    
 };
 
 ]]></content>

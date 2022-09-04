@@ -1,71 +1,123 @@
+template<size_t N = 26, char A = 'a'>
 struct SuffixAutomaton {
 
-    vector<int> len{0}, link{-1}, first{-1};
-    vector<bool> isClone{0};
-    vector<map<char, int>> next{{}};
-    int last = 0;
-
-    size_t size () const {
-        return len.size();
-    }
-
-    int push(int l, int sl, int fp, bool c, const map<char, int> &adj){
-        len.push_back(l);
-        link.push_back(sl);
-        first.push_back(fp);
-        isClone.push_back(c);
-        next.push_back(adj);
-        return (int)len.size() - 1;
-    }
-
-    void extend (const string& s) {
-        for(auto c: s) extend(c);
-    }
-
-    void extend (char c) {
-        int cur = push(len[last] + 1, -1, len[last], false, {}), p = last;
-        last = cur;
-        while(~p and !next[p].count(c))
-            next[p][c] = cur, p = link[p];
-
-        if(p == -1) return void(link[cur] = 0);
-
-        int q = next[p][c];
-        if(len[q] == len[p] + 1) return void(link[cur] = q);
-
-        int clone = push(len[p] + 1, link[q], first[q], true, next[q]);
-        while(~p and next[p][c] == q)
-            next[p][c] = clone, p = link[p];
-
-        link[q] = link[cur] = clone;
-    }
-
     SuffixAutomaton () {}
-    SuffixAutomaton (const string& s) {
+    SuffixAutomaton (const std::string& s) {
         extend(s);
     }
 
-    int find (const string& s) {
-        int u = 0;
-        for(auto c: s)
-            if(auto j = next[u].find(c); j == next[u].end()) return -1;
-            else u = j -> ss;
-        return u;
+    struct state {
+        int len{}, link{-1};
+        bool is_clone{};
+        std::array<int, N> next{};
+
+        state (
+            const int& len,
+            const int& link,
+            const bool& is_clone,
+            const std::array<int, N>& next
+        ): len(len), link(link), is_clone(is_clone), next(next)
+        {}
+        state () {}
+    };
+
+    void extend (const char c) {
+        assert(A <= c and c < A + N);
+
+        int cur = a.size(), p = last;
+        a.emplace_back(
+            a[last].len + 1, -1, false, std::array<int, N>()
+        );
+
+        last = cur;
+        while (~p and !a[p].next[c - A])
+            a[p].next[c - A] = cur, p = a[p].link;              // Add transitions from ancestor classes to new state
+        
+        if (!~p) return static_cast<void>(a[cur].link = 0);
+
+        int q = a[p].next[c - A];
+        if (a[q].len == a[p].len + 1)
+            return static_cast<void>(a[cur].link = q);          // If there exists a class containing len(p) + 1 length suffix of the current string, add suffix + c to it
+
+        int clone = a.size();
+        a.emplace_back(
+            a[p].len + 1, a[q].link, true, a[q].next
+        );                                                      // Otherwise create such a class
+        
+        while (~p and a[p].next[c - A] == q)
+            a[p].next[c - A] = clone, p = a[p].link;            // Redirect the transitions of ancestors to it
+        a[cur].link = a[q].link = clone;                        // Redirect the links of cur and q to it
     }
 
-    vector<int> counts () {
-        int n = size();
-        vector count(n, 0);
-        vector inv(n, vector(0, 0));
-        for(int i = 1; i < n; i++)
-            inv[link[i]].push_back(i);
+    std::vector<int> topological_order () {
+        const int n = size();
+        std::vector t(0, 0);
+        std::vector vis(n, false);
 
-        auto dfs = [&](auto dfs, int u) -> void {
-            count[u] = !isClone[u];
-            for(auto v: inv[u])
-                dfs(dfs, v), count[u] += count[v];
+        auto dfs = [&](auto&& dfs, int u) -> void {
+            vis[u] = 1;
+            for (auto v: a[u].next)
+                if (v and !vis[v])
+                    dfs(dfs, v);
+            t.push_back(u);
         };
+
+        for (int i = 0; i < n; i++)
+            if (!vis[i])
+                dfs(dfs, i);
+
+        std::reverse(t.begin(), t.end());
+        return t;
+    }
+
+    std::vector<std::vector<int>> suffix_tree () const {
+        const int n = size();
+        std::vector g(n, std::vector(0, 0));
+
+        for (int i = 0; i < n ; i++)
+            if (~a[i].link)
+                g[a[i].link].push_back(i);
+
+        return g;
+    }
+
+    std::vector<int> count_occur () const {
+        const int n = size();
+        auto t = suffix_tree();
+        std::vector count(n, 0);
+
+        auto dfs = [&](auto&& dfs, int u) -> int {
+            count[u] = !a[u].is_clone;
+            for (auto v: t[u])
+                count[u] += dfs(dfs, v);
+            return count[u];
+        };
+
         dfs(dfs, 0);
         return count;
     }
+
+    int find (const std::string& pattern) {
+        int u = 0;
+        for (const char c: pattern) {
+            u = a[u].next[c - A];
+            if (!u)
+                return -1;
+        }
+        
+        return u;
+    }
+
+    inline size_t size () const {
+        return a.size();
+    }
+
+    void extend (const std::string& s) {
+        a.reserve(a.size() + s.size() * 1.3);
+        for (const char c: s)
+            extend(c);
+    }
+
+    std::vector<state> a{{}};
+    int last = 0;
 };
