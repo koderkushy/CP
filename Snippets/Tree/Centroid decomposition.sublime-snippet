@@ -1,32 +1,54 @@
 <snippet>
 	<content><![CDATA[
-#pragma once
+struct CentroidDecomposition {
+    CentroidDecomposition (const std::vector<std::vector<int>>& g, const int root = 0)
+    : adj(g), n(g.size()), root(root), sub(g.size()), vis(g.size())
+    {
+        decompose(root);
 
-vector used(0, false);
-vector subtree(0, 0);
-vector g(0, vector(0, 0));
+    }
 
-int subtree_DFS(int u, int p = -1){
-    subtree[u] = 1;
-    for(int v: g[u]) if(v != p && !used[v])
-        subtree[u] += subtree_DFS(v, u);
-    return subtree[u];
-}
-int find_centroid(int u, int n, int p = -1){
-    for(int v: g[u]) if(v != p and !used[v] and subtree[v]*2 > n)
-        return find_centroid(v, n, u);
-    return u;
-}
-void decompose(int u){
-    int cen = find_centroid(u, subtree_DFS(u));
+    void decompose (const int root) {
+        auto [centroid, size] = get_centroid (root);
+        // solve here
 
-    //do something
-    
+        
 
-    used[cen] = 1;
-    for(int v: g[cen]) if(!used[v])
-        decompose(v);
-}
+
+        vis[centroid] = true;
+        for (auto v: adj[centroid])
+            if (!vis[v])
+                decompose(v);
+    }
+
+  private:
+    std::pair<int, int> get_centroid (const int root) {
+        auto dfs = [&](auto&& dfs, const int u, const int p = -1) -> int {
+            sub[u] = 1;
+            for (auto v: adj[u])
+                if (!vis[v] and v != p)
+                    sub[u] += dfs(dfs, v, u);
+            return sub[u];
+        };
+
+        const int& size = dfs(dfs, root);
+        int c = root, p = -1;
+
+        loop:;
+        for (auto v: adj[c])
+            if (!vis[v] and v != p and sub[v] > size / 2) {
+                p = c, c = v;
+                goto loop;
+            }
+
+        return {c, size};
+    }
+
+    std::vector<std::vector<int>> adj;
+    std::vector<int> sub;
+    std::vector<bool> vis;
+    const int n, root;
+};
 
 ]]></content>
 	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
