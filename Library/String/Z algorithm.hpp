@@ -1,4 +1,5 @@
-std::vector<int> Z (const std::string &a) {
+template<class vec_type>
+std::vector<int> z_function (const vec_type& a) {
     const int& n = a.size();
     std::vector z(n, 0);                                     // z[i] = longest common prefix of a[0:n], a[i:n]
 

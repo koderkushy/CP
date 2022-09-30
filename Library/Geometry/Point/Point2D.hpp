@@ -10,8 +10,19 @@ namespace geom {
         template<class T> point (const std::array<T, 2> a): x(a[0]), y(a[1]) {}
         template<class T> operator std::array<T, 2>() const { return {x, y}; }
 
-        int_t operator* (const point &otr) const { return x * otr.x + y * otr.y; }
-        int_t operator^ (const point &otr) const { return x * otr.y - y * otr.x; }
+        auto operator* (const point &otr) const {
+            if constexpr (std::is_integral<int_t>::value)
+                return static_cast<int64_t>(x) * otr.x + static_cast<int64_t>(y) * otr.y;
+            else
+                return x * otr.x + y * otr.y;
+        }
+        auto operator^ (const point &otr) const {
+            if constexpr (std::is_integral<int_t>::value)
+                return static_cast<int64_t>(x) * otr.y - static_cast<int64_t>(y) * otr.x;
+            else
+                return x * otr.y - y * otr.x;
+        }
+
         point operator+ (const point &otr) const { return {x + otr.x, y + otr.y}; }
         point operator- (const point &otr) const { return {x - otr.x, y - otr.y}; }
         point &operator+= (const point &otr) { return *this = *this + otr; }
@@ -23,27 +34,34 @@ namespace geom {
         friend point operator/ (const int_t &c, const point &p) { return {c / p.x, c / p.y}; }
         point operator+ (const int_t &c) const { return {x + c, y + c}; }
         point operator- (const int_t &c) const { return {x - c, y - c}; }
-        point operator* (const int_t &c) const { return {x * c, y * c}; }
+        auto operator* (const int_t &c) const {
+            if constexpr (std::is_integral<int_t>::value)
+                return point<int64_t>(x * static_cast<int64_t>(c), y * static_cast<int64_t>(c));
+            else
+                return point<int_t>(x * c, y * c);
+        }
+
         point operator/ (const int_t &c) const { return {x / c, y / c}; }
-        point &operator+ (const int_t &c) { return *this = *this + c; }
-        point &operator- (const int_t &c) { return *this = *this - c; }
-        point &operator* (const int_t &c) { return *this = *this * c; }
-        point &operator/ (const int_t &c) { return *this = *this / c; }
+        point &operator+= (const int_t &c) { return *this = *this + c; }
+        point &operator-= (const int_t &c) { return *this = *this - c; }
+        point &operator*= (const int_t &c) { return *this = *this * c; }
+        point &operator/= (const int_t &c) { return *this = *this / c; }
         bool operator< (const point &otr) const { return x != otr.x ? x < otr.x : y < otr.y; }
         bool operator> (const point &otr) const { return x != otr.x ? x > otr.x : y > otr.y; }
         bool operator<= (const point &otr) const { return ! (*this > otr); }
         bool operator>= (const point &otr) const { return ! (*this < otr); }
         bool operator== (const point &otr) const {
-            if constexpr (std::is_floating_point<int_t>::value)
-                return abs(x - otr.x) < zero and abs(y - otr.y) < zero;
-            else
+            if constexpr (std::is_integral<int_t>::value)
                 return x == otr.x and y == otr.y;
+            else
+                return abs(x - otr.x) < zero and abs(y - otr.y) < zero;
         }
+        
         bool operator!= (const point &otr) const { return ! (*this == otr); }
 
         double norm () const { return hypot(x, y); }
         long double norml () const { return hypotl(x, y); }
-        int_t squared_norm () const { return x * x + y * y; }
+        auto squared_norm () const { return (*this) * (*this); }
 
         double arg () const { return atan2(y, x); }
         long double argl () const { return atan2l(y, x); }
@@ -72,20 +90,20 @@ namespace geom {
 
     template<class T> double distance (const point<T> &p, const point<T> &q){ return (p - q).norm(); }
     template<class T> long double distancel (const point<T> &p, const point<T> &q){ return (p - q).norml(); }
-    template<class T> T squared_distance (const point<T> &p, const point<T> &q){ return (p - q).squared_norm(); }
+    template<class T> auto squared_distance (const point<T> &p, const point<T> &q){ return (p - q).squared_norm(); }
 
-    template<class T> T area_twice_signed (const point<T> a, const point<T> b, const point<T> c) { return (b - a) ^ (c - b); }
-    template<class T> T area_twice_signed (const std::vector<point<T>> &a) {
-        if (a.empty()) return {};
-        T area = a.back() ^ a.front();
+    template<class T> auto area_twice_signed (const point<T> a, const point<T> b, const point<T> c) { return (b - a) ^ (c - b); }
+    template<class T> auto area_twice_signed (const std::vector<point<T>> &a) {
+        auto area = a.size() < 2 ? 0 : a.back() ^ a.front();
         for (int i = 1; i < a.size(); i++)
             area += a[i - 1] ^ a[i];
         return area;
     }
-    template<class T> T area_twice (const point<T> a, const point<T> b, const point<T> c) { return abs(area_twice_signed(a, b, c)); }
+    template<class T> auto area_twice (const point<T> a, const point<T> b, const point<T> c) { return abs(area_twice_signed(a, b, c)); }
     template<class T> double area_signed (const point<T> a, const point<T> b, const point<T> c) { return 0.5 * area_twice_signed(a, b, c); }
     template<class T> double area (const point<T> a, const point<T> b, const point<T> c) { return abs(area_signed(a, b, c)); }
-    template<class T> T area_twice (const std::vector<point<T>> &a) { return abs(area_twice_signed(a)); }
+    
+    template<class T> auto area_twice (const std::vector<point<T>> &a) { return abs(area_twice_signed(a)); }
     template<class T> double area_signed (const std::vector<point<T>> &a) { return 0.5 * area_twice_signed(a); }
     template<class T> double area (const std::vector<point<T>> &a) { return abs(area_signed(a)); }
 
@@ -122,14 +140,19 @@ namespace geom {
     }
 
     template<class T> point<T> centroid_thrice (const point<T> a, const point<T> b, const point<T> c) { return a + b + c; }
-    template<class T> std::pair<point<T>, T> __centroid (const std::vector<point<T>> &a) {
+    template<class T> auto __centroid (const std::vector<point<T>> &a) {
         assert(!a.empty());
-        T del = a.back() ^ a.front(), area = del;
-        point<T> c = (a.back() + a.front()) * del;
+        auto del = a.back() ^ a.front(), area = del;
+        auto c = (a.back() + a.front()) * del;
+
         for (int i = 1; i < a.size(); i++)
-            del = a[i - 1] ^ a[i], area += del, c += (a[i - 1] + a[i]) * del;
-        return {c, area};
+            del = a[i - 1] ^ a[i],
+            area += del,
+            c += (a[i - 1] + a[i]) * del;
+
+        return std::pair(c, area);
     }
+
     template<class T> pointd centroid (const point<T> a, const point<T> b, const point<T> c) { return pointd(centroid_thrice(a, b, c)) / 3; }
     template<class T> pointld centroidl (const point<T> a, const point<T> b, const point<T> c) { return pointld(centroid_thrice(a, b, c)) / 3; }
     template<class T> pointd centroid (const std::vector<point<T>> &a) { auto [c, area_twice_signed] = __centroid(a); return pointd(c) / static_cast<double>(3 * area_twice_signed); }

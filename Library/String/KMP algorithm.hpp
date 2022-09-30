@@ -1,4 +1,5 @@
-std::vector<int> KMP (const std::string &a) {
+template<class vec_type>
+std::vector<int> kmp_function (const vec_type& a) {
     const int& n = a.size();
     std::vector p(n, 0);                    // p[i] = longest common prefix of a[0:n] and suffix of a[0:i]
 
