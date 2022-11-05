@@ -1,0 +1,3 @@
+{
+	"shell_cmd": "g++ -std=c++17 -Wall -Wconversion -Wfatal-errors -fsanitize=undefined,address -g \"$file\" -o \"$file_base_name\" && ./\"$file_base_name\""
+}
