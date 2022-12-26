@@ -1,0 +1,18 @@
+<snippet>
+	<content><![CDATA[
+template<class mint>
+auto zeta_transform (std::vector<mint>& a, const bool invert = false) {
+    const size_t n = a.size();
+    assert(__builtin_popcount(n) == 1);
+
+    for (int i = 1; i < n; i <<= 1)
+        for (int mask = 0; mask < n; ++mask)
+            if ((mask & i) == 0)
+                a[mask | i] += (invert? -1: 1) * a[mask];
+}
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>isos</tabTrigger>
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<!-- <scope>source.python</scope> -->
+</snippet>

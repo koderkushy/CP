@@ -1,0 +1,115 @@
+<snippet>
+	<content><![CDATA[
+template<
+    class uint_t
+>
+class Dinics {
+public:
+
+    using edge = std::pair<int, int>;
+
+    Dinics (const int n, const std::vector<std::pair<edge, uint_t>> &e)
+    : n(n), C(n, std::vector(n, zero)), adj(n), level(n), next(n)
+    {
+        assert(n > 1 and n < 5000);
+        for (auto [p, c]: e) {
+            auto& [u, v] = p;
+            adj[u].push_back(v),
+            adj[v].push_back(u),
+            C[u][v] += c;
+        }
+
+        initial = C;
+        for (auto& v: adj)
+            std::sort(v.begin(), v.end()), v.erase(std::unique(v.begin(), v.end()), v.end());
+    }
+
+    uint_t max_flow (const int s, const int t) {
+        static uint_t flow = 0;
+
+        if (source == s and sink == t)
+            return flow;
+
+        C = initial, source = s, sink = t;
+        return flow = dinics_max_flow();
+    }
+
+    std::vector<bool> min_cut (const int s, const int t) {
+        max_flow(s, t);
+
+        std::vector<bool> cut(n, true);
+        for (int i = 0; i < n; i++)
+            if (~level[i])
+                cut[i] = false;         // true -> source side
+
+        return cut;
+    }
+
+private:
+
+    static constexpr uint_t zero = static_cast<uint_t>(1e-9), INF = std::numeric_limits<uint_t>::max();
+
+    const int n;
+    std::vector<std::vector<uint_t>> C, initial;
+    std::vector<std::vector<int>> adj;
+    std::vector<int> level, next;
+    int source = -1, sink = -1;
+
+    uint_t dinics_max_flow () {
+        uint_t flow = 0;
+
+        while (bfs_level()) {
+            std::fill(next.begin(), next.end(), 0);
+            for (uint_t df; (df = dfs_augment(source, INF)) > zero; )
+                flow += df;
+        }
+
+        return flow;
+    }
+
+    bool bfs_level () {
+        std::fill(level.begin(), level.end(), -1);
+        level[source] = 0;
+
+        static std::vector<int> q(n);
+        static int l, r;
+
+        q[0] = source, l = 0, r = 1;
+
+        while (l < r) {
+            int u = q[l++];
+            for (int v: adj[u]) if (C[u][v] > zero and level[v] == -1) {
+                level[v] = level[u] + 1, q[r++] = v;
+                if (v == sink)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    uint_t dfs_augment (const int u, const uint_t& block) {
+        if (u == sink)
+            return block;
+
+        while (next[u] < adj[u].size()) {
+            const int& v = adj[u][next[u]++];
+
+            if (C[u][v] <= zero or level[u] + 1 != level[v])
+                continue;
+
+            if (auto flow = dfs_augment(v, std::min(block, C[u][v])); flow > zero) {
+                C[u][v] -= flow, C[v][u] += flow;
+                return flow;
+            }
+        }
+
+        return zero;
+    }
+};
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>imaxflow</tabTrigger>
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<!-- <scope>source.python</scope> -->
+</snippet>

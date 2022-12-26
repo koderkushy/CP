@@ -1,0 +1,184 @@
+#ifndef CP_POLYNOMIAL_HPP
+#define CP_POLYNOMIAL_HPP
+
+#include "lib/Math/Transforms/number_theoretic_transform.hpp"
+
+template<typename mint>
+class polynomial {
+public:
+    
+    std::vector<mint> p;
+
+    polynomial () {}
+    polynomial (int n): p(n) {}
+    explicit polynomial (int n, mint X): p(n, X) {}
+    explicit polynomial (const std::vector<mint>& p_object): p(p_object) {}
+    explicit polynomial (const std::initializer_list<mint>& p_object): p(p_object) {}
+    template<class iter> polynomial (iter begin, iter end): p(begin, end) {}
+
+    size_t size() const { return p.size(); }
+    auto resize (int n, mint x = 0) { return p.resize(n, x), *this; }
+    int degree () const { return p.empty() ? std::numeric_limits<int>::max() : size() - 1; }
+    mint &operator[] (const int i) { return p[i]; }
+    const mint &operator[] (const int i) const { return p[i]; }
+    operator std::vector<mint>&() const { return p; }
+    typename std::vector<mint>::iterator begin () { return p.begin(); }
+    typename std::vector<mint>::iterator end () { return p.end(); }
+
+    mint evaluate (mint x) const {
+        mint px = 0;
+        for (auto i = p.size(); --i; )
+            px = px * x + p[i];
+        return px;
+    }
+
+    auto operator*= (const polynomial& f) { return conv_ntt::conv(p, f.p), *this; }
+    auto operator* (const polynomial& f) const { return std::move(polynomial(*this) *= f); }
+    template<typename U> polynomial& operator*= (const U x) { for (mint &v: p) v *= mint(x); return *this; }
+    template<typename U> auto operator* (const U x) const { return std::move(polynomial(*this) *= x); }
+    template<typename U> friend auto operator* (const U x, polynomial P) { for (auto &v: P) v *= mint(x); return std::move(P); }
+
+    auto operator/= (const polynomial& f) {
+        static polynomial b;
+
+        if (p.size() < f.size())
+            return p.clear(), *this;
+
+        const int n = p.degree() - f.degree() + 1;
+        b.assign(n, mint());
+
+        std::copy(f.rbegin(), f.rbegin() + std::min(f.size(), b.size()), b.begin());
+        conv_ntt::conv(p, b.inverse(n), n);
+
+        std::reverse(all(p));
+        return *this;
+    }
+    auto operator/ (const polynomial& f) { return std::move(polynomial(*this) /= f); }
+    auto operator/= (const mint x) { assert(x.get()); mint inv_x = 1 / x; for (auto &c: p) c *= inv_x; return *this; }
+    auto operator/ (const mint x) const { return std::move(polynomial(*this) /= x); }
+
+    auto divrem (const polynomial &f) const {
+        auto q = *this / f, r = *this - q * f;
+        while (!r.empty() && r.back() == 0) r.pop_back();
+        return std::pair(std::move(q), std::move(r));
+    }
+
+    auto operator% (const polynomial &f) const { return std::move(this -> divrem(f).second); }
+    auto operator%= (const polynomial &f) const { return *this = *this % f; }
+
+    auto operator+= (const polynomial &f) { if (size() < f.size()) resize(f.size()); for (size_t i = 0; i < f.size(); ++i) p[i] += f[i]; return *this; }
+    auto operator-= (const polynomial &f) { if (size() < f.size()) resize(f.size()); for (size_t i = 0; i < f.size(); ++i) p[i] -= f[i]; return *this; }
+    auto operator+ (const polynomial &f) const { return std::move(polynomial(*this) += f); }
+    auto operator- (const polynomial &f) const { return std::move(polynomial(*this) -= f); }
+    auto operator+= (const mint &x) { if (p.empty()) p.emplace_back(); return p[0] += x, *this; }
+    auto operator-= (const mint &x) { if (p.empty()) p.emplace_back(); return p[0] -= x, *this; }
+    auto operator+ (const mint &x) const { return std::move(polynomial(*this) += x); }
+    auto operator- (const mint &x) const { return std::move(polynomial(*this) -= x); }
+    friend auto operator+ (const mint &x, const polynomial &f) { return std::move(f + x); }
+    friend auto operator- (const mint &x, const polynomial &f) { return std::move(-f + x); }
+    
+    auto operator-() const { polynomial res(*this); for (uint32_t i = 0; i < size(); ++i) res[i] = mint() - res[i]; return std::move(res); }
+
+    inline auto inverse () const { return inverse(p.size()); }
+    auto inverse (const size_t MAX) const {
+        static std::vector<mint> a;
+        assert(p.size() and p[0].get());
+
+        polynomial b(1, p[0].inv());
+        size_t n = 1;
+
+        while (n < MAX) {
+            a = std::vector<mint>(p.begin(), p.begin() + std::min(n << 1, p.size()));
+
+            a.resize(n << 2), conv_ntt::Ntt<mint>::inplace(a);
+            b.resize(n << 2), conv_ntt::Ntt<mint>::inplace(b.p);
+
+            for (uint32_t i = 0; i < b.size(); ++i)
+                b.p[i] = b.p[i] * (2 - a[i] * b.p[i]);
+
+            conv_ntt::Ntt<mint>::inplace(b.p, 1), b.resize(n <<= 1);
+        }
+
+        b.resize(MAX), a.clear();
+        return std::move(b);
+    }
+
+    inline auto invert () { return invert(size()); }
+    inline auto invert (const size_t MAX) { return *this = inverse(MAX); }
+
+    auto differentiate () {
+        for (uint32_t i = 1; i < p.size(); i++)
+            p[i - 1] = p[i] * i;
+
+        return p.pop_back(), *this;
+    }
+    auto derivative () const { return std::move(polynomial(*this).differentiate()); }
+
+    auto integrate () {
+        p.emplace_back();
+        for (uint32_t i = p.size(); --i; )
+            p[i] = p[i - 1] / i;
+
+        return p[0] = 0, *this;
+    }
+    auto integral () const { return std::move(polynomial(*this).integrate()); }
+
+    inline auto natural_log () const { return natural_log(size()); }
+    auto natural_log (const size_t length) const {
+        assert(size() and p[0] == 1);
+
+        if (length == 0)
+            return std::move(polynomial());
+
+        return std::move((inverse(length) * derivative()).resize(length - 1).integrate());
+    }
+    inline auto take_natural_log () { return take_natural_log(size()); }
+    inline auto take_natural_log (const size_t length) {  return *this = this -> natural_log(length); }
+
+    inline auto exp () const { return exp(size()); }
+    auto exp (const size_t length) const {
+        assert(p.size() and p[0] == 0);
+
+        polynomial b(1, 1);
+        size_t n = 1;
+
+        while (n < length) {
+            n <<= 1;
+            polynomial a = mint(1) - b.natural_log(n);
+            for (size_t i = 0; i < std::min(n, size()); i++)
+                a[i] += p[i];
+            b *= a, b.resize(n);
+        }
+
+        b.resize(length);
+        return std::move(b);
+    }
+
+    inline auto take_exp () { return take_exp(size()); }
+    inline auto take_exp (const size_t length) { return *this = exp(length); }
+
+    inline auto pow (int64_t e) const { return pow(e, size()); }
+    auto pow (int64_t e, const size_t length) const {
+        if (p.empty())
+            return std::move(polynomial());
+        if (e == 0)
+            return std::move(polynomial(1, 1).resize(length));
+
+        int shift = 0;
+        while (shift < size() and p[shift] == 0)
+            shift++;
+
+        if (shift == size() or (shift and (e >= length or e * shift >= length)))
+            return std::move(polynomial(length, 0));
+
+        auto trimmed_l = length - e * shift;
+
+        auto lead = p[shift];
+        auto res = ((polynomial(p.begin() + shift, p.end()) /= lead).natural_log(trimmed_l) * e).exp(trimmed_l) * lead.pow(e);
+        res.p.insert(res.begin(), e * shift, mint(0));
+
+        return std::move(res);
+    }
+};
+
+#endif // CP_POLYNOMIAL_HPP

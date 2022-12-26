@@ -1,0 +1,129 @@
+<snippet>
+	<content><![CDATA[
+template<
+    class int64,
+    class int32,
+    bool FLIP = false
+>
+class LiChaoTreeOffline {
+    static_assert(std::is_integral_v<int64> and std::is_integral_v<int32>);
+public:
+    static constexpr int64 INF = std::numeric_limits<int64>::max();
+
+    class Line {
+    public:
+        int64 m, c;
+        constexpr Line (const int64 m, const int64 c): m(m), c(c) {}
+        constexpr Line (): Line(0, INF) {}
+        inline int64 operator() (int32 i) const {
+            return m * i + c;
+        }
+    };
+
+    class Node {
+    public:
+        Line z;
+        int32 l, r;
+        inline void operator= (int32 i) {
+            l = r = i;
+        }
+    };
+    
+    int sz, N;
+    std::vector<Node> a;
+
+    template<class Iter>
+    LiChaoTreeOffline (const Iter L, const Iter R)
+    : LiChaoTreeOffline (std::vector(L, R)) {}
+
+    LiChaoTreeOffline (std::vector<int32> leafs) {
+        if (leafs.empty())
+            leafs.emplace_back(0);
+
+        std::sort(std::begin(leafs), std::end(leafs));
+        leafs.erase(std::unique(std::begin(leafs), std::end(leafs)), std::end(leafs));
+
+        sz = leafs.size();
+        N = sz <= 1? 1: (1 << 32 - __builtin_clz(sz - 1));
+
+        a.resize(N << 1);
+        std::copy(std::begin(leafs), std::end(leafs), std::begin(a) + N);
+        std::fill(std::begin(a) + N + sz, std::end(a), leafs.back());
+
+        for (int q = N; --q; )
+            a[q].l = a[q << 1].l,
+            a[q].r = a[q<<1|1].r;
+    }
+
+    // add line y = mx + c
+    void up (int64 m, int64 c, int j) {
+        Line x = [&](){
+            if constexpr (FLIP) return Line(-m, -c);
+            else return Line(m, c);
+        }();
+
+        int64 c_l = x(a[j].l), c_r = x(a[j].r);
+
+        while (true) {
+            Line& z = a[j].z;
+            const int64 z_l = z(a[j].l), z_r = z(a[j].r);
+
+            if (c_l <= z_l and c_r <= z_r)
+                return void(z = x);
+            if (c_l >= z_l and c_r >= z_r)
+                return;
+
+            j <<= 1;
+            const int64 c_m = x(a[j].r), z_m = z(a[j].r);
+
+            if (c_m < z_m) {
+                if (c_l > z_l)
+                    c_l = z_l, c_r = z_m;
+                else
+                    c_l = z(a[++j].l), c_r = z_r;
+                std::swap(x, z);
+            } else {
+                if (c_l > z_l)
+                    c_l = x(a[++j].l);
+                else
+                    c_r = c_m;
+            }
+        }
+    }
+
+    // add line y = mx + c on [ql, qr) --- ql, qr must fit
+    void up (const int64 k, const int64 b, const int32 ql, const int32 qr) {
+        auto call = [&](auto&& call, int j) -> void {
+            if (a[j].l >= qr || a[j].r < ql)
+                return;
+            if (a[j].l >= ql && a[j].r < qr)
+                return up(k, b, j);
+
+            if (ql < a[j<<1|1].l)
+                call(call, j << 1);
+            if (qr > a[j<<1|1].l)
+                call(call, j<<1|1);
+        };
+
+        call(call, 1);
+    }
+
+    // query optimum at x = i
+    int64 qu (int32 x) const {
+        int64 mi = a[1].z(x);
+
+        for (int j = 1; j < N; ) {
+            j <<= 1, j += x > a[j].r;
+            mi = std::min(mi, a[j].z(x));
+        }
+
+        if constexpr (FLIP) mi = -mi;
+        return mi;
+    }
+};
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>ilichaotreeoffline</tabTrigger>
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<!-- <scope>source.python</scope> -->
+</snippet>
