@@ -1,22 +1,57 @@
 #ifndef CP_BINOMIAL_COEFFICIENTS_HPP
 #define CP_BINOMIAL_COEFFICIENTS_HPP
 
-#include "lib/Math/modular_integer.hpp"
+// need mint
 
-class comb {
-public:
-    static vector<mint> frl, irl;
-    static void setup (const int N = 1 << 18) {
-        vector<mint> frl(N, 1), irl(N, 1);
-        for(int i = 1; i < N; i++)
-            frl[i]=frl[i-1]*i, irl[i]=irl[i-1]/i;
+namespace comb {
+    constexpr int N = 1 << 20;
+
+    template<class mint>
+    class Frl {
+    public:
+        static const std::vector<mint> v, inv;
+    };
+
+    template<class mint>
+    const std::vector<mint> Frl<mint>::v = []() {
+        std::vector<mint> a(N);
+        a[0] = 1;
+
+        for (int i = 1; i < N; ++i)
+            a[i] = a[i - 1] * i;
+
+        return a;
+    }();
+
+    template<class mint>
+    const std::vector<mint> Frl<mint>::inv = []() {
+        std::vector<mint> a(N);
+        a[N - 1] = Frl<mint>::v[N - 1].inv();
+
+        for (int i = N - 1; i; --i)
+            a[i - 1] = a[i] * i;
+
+        return a;
+    }();
+
+    template<class mint>
+    auto Ncr (const int n, const int r) {
+        return assert(n < N), (r >= 0 and r <= n ? Frl<mint>::v[n] * Frl<mint>::inv[r] * Frl<mint>::inv[n - r]: 0);
     }
-    static mint ncr (int n, int r) { return (r > n or r < 0)? 0: frl[n]*irl[r]*irl[n-r]; }
-    static mint npr (int n, int r) { return (r > n or r < 0)? 0: frl[n]*irl[n-r]; }
-};
 
-vector<mint> comb::frl, comb::irl;
-constexpr auto &ncr = comb::ncr, &npr = comb::npr;
-constexpr auto &frl = comb::frl, &irl = comb::irl;
+    template<class mint>
+    auto Npr (const int n, const int r) {
+        return assert(n < N), (r >= 0 and r <= n ? Frl<mint>::v[n] * Frl<mint>::inv[n - r]: 0);
+    }
+
+} // namespace comb
+
+using namespace comb;
+
+const auto& frl = Frl<mint>::v;
+const auto& irl = Frl<mint>::inv;
+const auto& ncr = Ncr<mint>;
+const auto& npr = Npr<mint>;
+
 
 #endif // CP_BINOMIAL_COEFFICIENTS_HPP

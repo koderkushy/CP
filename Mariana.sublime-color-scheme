@@ -1,0 +1,18 @@
+// Documentation at https://www.sublimetext.com/docs/color_schemes.html
+{
+	"variables":
+	{
+        "black1": "rgb(30, 30, 30)",
+
+	},
+	"globals":
+	{
+        "background": "var(black1)",
+        "foreground": "var(white3)",
+
+	},
+	"rules":
+	[
+		
+	]
+}
