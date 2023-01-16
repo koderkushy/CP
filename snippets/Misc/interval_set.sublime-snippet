@@ -76,7 +76,7 @@ public:
             auto [l, r] = *f;
             for (; f != a.end() and f -> first <= r; )
                 r = std::max(r, f -> second), f++;
-            u.insert(interval(l, r));
+            u.push_back(interval(l, r));
         }
 
         a = std::set(u.begin(), u.end());
