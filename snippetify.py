@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import os
 import re
 
@@ -45,8 +47,9 @@ def dfs (file_path, included):
 
 	return result
 
+lib_path = "/Users/kushyalt/Library/Application Support/Sublime Text/Packages/User/lib"
 
-for root, subdirs, files in os.walk(os.getcwd() + "/lib"):
+for root, subdirs, files in os.walk(lib_path):
 	for file in files:
 
 		if not cpp_extension.match(file):

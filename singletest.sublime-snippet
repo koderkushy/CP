@@ -4,22 +4,21 @@
 using namespace std;
 
 typedef long long           lol;
-typedef pair<int,int>       pii;
+typedef std::pair<int,int>  pii;
 #define pb                  push_back
 #define ub                  upper_bound
 #define lb                  lower_bound
-#define fo(i,l,r,d)         for(auto i=(l); (d)<0?i>(r):((d)>0?i<(r):0); i+=(d))
+#define fo(i,l,r,d)         for (auto i=(l); (d)<0?i>(r):((d)>0?i<(r):0); i+=(d))
 #define all(x)              x.begin(), x.end()
 #define ff                  first
 #define ss                  second
 
-mt19937 rng (chrono::high_resolution_clock::now().time_since_epoch().count());
-template <typename A, typename B> ostream& operator<< (ostream &cout, pair<A, B> const &p) { return cout << "(" << p.first << ", " << p.second << ")"; }
-template <typename A, typename B> istream& operator>> (istream& cin, pair<A, B> &p) {cin >> p.first; return cin >> p.second;}
-template <typename A> ostream& operator<< (ostream &cout, vector<A> const &v) {cout << "["; for(int i = 0; i < v.size(); i++) {if (i) cout << ", "; cout << v[i];} return cout << "]";}
-template <typename A> istream& operator>> (istream& cin, vector<A> &x){for(int i = 0; i < x.size()-1; i++) cin >> x[i]; return cin >> x[x.size()-1];}
-template <typename A, typename B> A amax (A &a, B b){ if (b > a) a = b ; return a; }
-template <typename A, typename B> A amin (A &a, B b){ if (b < a) a = b ; return a; }
+std::mt19937 rng (std::chrono::high_resolution_clock::now().time_since_epoch().count());
+template <typename A, typename B> std::ostream& operator<< (std::ostream &cout, const std::pair<A, B> &p) { return cout << p.first << ' ' << p.second; } template <typename A, size_t n> std::ostream& operator<< (std::ostream &cout, const std::array<A, n> &v) { for (int i = 0; i < n - 1; ++i) cout << v[i] << ' '; return (n ? cout << v.back(): cout << '\n'); } template <typename A> std::ostream& operator<< (std::ostream &cout, const std::vector<A> &v) { for (int i = 0; i < v.size() - 1; ++i) cout << v[i] << ' '; return (v.size() ? cout << v.back(): cout << '\n'); }
+template <typename A, typename B> std::istream& operator>> (std::istream &cin, std::pair<A, B> &p) { cin >> p.first; return cin >> p.second; } template <typename A, size_t n> std::istream& operator>> (std::istream &cin, std::array<A, n> &v) { assert(n); for (int i = 0; i < n - 1; i++) cin >> v[i]; return cin >> v.back(); } template <typename A> std::istream& operator>> (std::istream &cin, std::vector<A> &v) { assert(v.size()); for (int i = 0; i < v.size() - 1; i++) cin >> v[i]; return cin >> v.back(); }
+template <typename A, typename B> auto amax (A &a, const B b){ if (b > a) a = b ; return a; }
+template <typename A, typename B> auto amin (A &a, const B b){ if (b < a) a = b ; return a; }
+
 
 
 int main () {
