@@ -1,7 +1,6 @@
 #ifndef CP_TRIE_HPP
 #define CP_TRIE_HPP
 
-// untested
 template<int M = 26>
 class Trie {
 public:
@@ -21,13 +20,6 @@ public:
 
     using node = std::array<int, M>;
 
-    std::vector<node> a{{}};
-    std::vector<int> c{0};
-
-    constexpr int push () {
-        a.emplace_back({}); return a.size() - 1;
-    }
-
     Trie () {}
     Trie (const std::vector<string>& a) {
         for (auto s: a) insert(s);
@@ -35,7 +27,7 @@ public:
 
     void insert (const string& s) {
         int u = 0;
-        for (char& x: s) {
+        for (char x: s) {
             u = (a[u][ord[x]] ? a[u][ord[x]] : a[u][ord[x]] = push());
             c[u]++;
         }
@@ -53,6 +45,17 @@ public:
                 return 0;
         }
         return c[u];
+    }
+
+private:
+
+    std::vector<node> a{{}};
+    std::vector<int> c{0};
+
+    int push () {
+        a.emplace_back();
+        c.emplace_back();
+        return a.size() - 1;
     }
 };
 
