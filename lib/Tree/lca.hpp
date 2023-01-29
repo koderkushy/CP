@@ -15,11 +15,12 @@ public:
     depth(N),
     log_max_depth((dfs(root), 32 - __builtin_clz(max(*std::max_element(depth.begin(), depth.end()) - 1, 0))))
     {
-        for (auto& v: par) v.resize(log_max_depth + 1);
+        for (auto& v: par)
+            v.resize(log_max_depth + 1);
+
         for (int j = 0; j < log_max_depth; ++j)
             for (int i = 0; i < N; ++i)
                 par[i][j + 1] = par[par[i][j]][j];
-
     }
 
     inline bool is_ancestor (const int u, const int v) const {
@@ -38,7 +39,7 @@ public:
         return par[v][0];
     }    
 
-    int ancestor (int u, int l) {
+    int ancestor (int u, int l) const {
         if (l >= depth[u])
             return root;
         
@@ -46,6 +47,10 @@ public:
             if (l & 1) u = par[u][i];
 
         return u;
+    }
+
+    int dist (const int u, const int v) const {
+        return depth[u] + depth[v] - 2 * depth[lca(u, v)];
     }
 
 private:
@@ -70,7 +75,6 @@ private:
             sub[u] += sub[v];
         }
     }
-
 };
 
 #endif // CP_TREE_LCA_HPP

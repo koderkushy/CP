@@ -1,30 +1,35 @@
 <snippet>
 	<content><![CDATA[
-class CntdDecomposition {
+class CentroidTree {
 public:
 
-    CntdDecomposition (const std::vector<std::vector<int>>& g, const int root = 0)
-    : adj(g), n(g.size()), root(root), sub(g.size()), vis(g.size())
+    CentroidTree (const std::vector<std::vector<int>>& initial_adj, const int root = 0):
+    N(initial_adj.size()),
+    adj(initial_adj),
+    sub(N),
+    vis(N),
+    par(N)
     {
         decompose(root);
-
     }
 
-    void decompose (const int root) {
+    void decompose (const int root, const int p = -1) {
         auto [centroid, size] = get_centroid (root);
         
-        // solve here
+        // solve here. Don't visit vis[u] = 1 vertices
 
         
 
 
-        vis[centroid] = true;
+        vis[centroid] = true, par[centroid] = p;
+
         for (auto v: adj[centroid])
             if (!vis[v])
-                decompose(v);
+                decompose(v, centroid);
     }
 
 private:
+
     std::pair<int, int> get_centroid (const int root) {
         auto dfs = [&](auto&& dfs, const int u, const int p = -1) -> int {
             sub[u] = 1;
@@ -34,8 +39,8 @@ private:
             return sub[u];
         };
 
-        const int& size = dfs(dfs, root);
-        int c = root, p = -1;
+        const int size = dfs(dfs, root);
+        int p = -1, c = root;
 
         loop:;
         for (auto v: adj[c])
@@ -47,10 +52,10 @@ private:
         return {c, size};
     }
 
+    const int N;
     std::vector<std::vector<int>> adj;
-    std::vector<int> sub;
+    std::vector<int> sub, par;
     std::vector<bool> vis;
-    const int n, root;
 };
 ]]></content>
 	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
