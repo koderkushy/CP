@@ -3,7 +3,6 @@
 
 class HopcroftKarp {
 public:
-
     using edge = std::pair<int, int>;
 
     HopcroftKarp (const int N, const int M, const std::vector<edge>& e)
@@ -19,72 +18,57 @@ public:
         return size;
     }
 
-    std::vector<edge> &matched_edges () const {
-        static auto edges = [&]() {
-            std::vector<edge> e;
-            for (int i = 0; i < N; i++) if (L_match[i] != -1)
+    std::vector<edge> matched_edges () const {
+        std::vector<edge> e;
+
+        for (int i = 0; i < N; i++)
+            if (L_match[i] != -1)
                 e.emplace_back(i, L_match[i]);
-
-            return e;
-        }();
-
-        return edges;
+        return e;
     }
 
-    std::vector<edge> &min_edge_cover () const {
-        static auto cover = [&]() {
-            auto cover = matched_edges();
+    std::vector<edge> min_edge_cover () const {
+        auto cover = matched_edges();
 
-            std::vector<std::vector<int>> Radj(M);
+        std::vector<std::vector<int>> Radj(M);
 
-            for (int i = 0; i < N; i++) {
-                for (auto v: adj[i])
-                    Radj[v].push_back(i);
-                if (L_match[i] == -1 and adj[i].size())
-                    cover.emplace_back(i, adj[i][0]);
-            }
+        for (int i = 0; i < N; i++) {
+            for (auto v: adj[i])
+                Radj[v].push_back(i);
+            if (L_match[i] == -1 and adj[i].size())
+                cover.emplace_back(i, adj[i][0]);
+        }
 
-            for (int i = 0; i < M; i++)
-                if (R_match[i] == -1 and Radj[i].size())
-                    cover.emplace_back(Radj[i][0], i);
-
-            return cover;
-        }();
+        for (int i = 0; i < M; i++)
+            if (R_match[i] == -1 and Radj[i].size())
+                cover.emplace_back(Radj[i][0], i);
 
         return cover;
     }
     
-    std::array<std::vector<int>, 2> &min_vertex_cover () const {
-        static auto cover = [&]() {
-            std::array<std::vector<int>, 2> set;
+    std::array<std::vector<int>, 2> min_vertex_cover () const {
+        std::array<std::vector<int>, 2> set;
 
-            for (int i = 0; i < N; i++) {
-                if (~L_match[i]) {
-                    if (~reach[i]) set[1].push_back(L_match[i]);
-                    else set[0].push_back(i);
-                }
+        for (int i = 0; i < N; i++) {
+            if (~L_match[i]) {
+                if (~reach[i]) set[1].push_back(L_match[i]);
+                else set[0].push_back(i);
             }
+        }
 
-            return set;
-        }();
-
-        return cover;
+        return set;
     }
 
-    std::array<std::vector<int>, 2> &max_independent_set () const {
-        static auto set = [&]() {
-            const auto& vertex_cover = min_vertex_cover();
-            std::vector<bool> l(N, true), r(M, true);
+    std::array<std::vector<int>, 2> max_independent_set () const {
+        const auto& vertex_cover = min_vertex_cover();
+        std::vector<bool> l(N, true), r(M, true);
 
-            for (int i: vertex_cover[0]) l[i] = false;
-            for (int i: vertex_cover[1]) r[i] = false;
+        for (int i: vertex_cover[0]) l[i] = false;
+        for (int i: vertex_cover[1]) r[i] = false;
 
-            std::array<std::vector<int>, 2> set;
-            for (int i = 0; i < N; i++) if (l[i]) set[0].push_back(i);
-            for (int i = 0; i < M; i++) if (r[i]) set[1].push_back(i);
-
-            return set;
-        }();
+        std::array<std::vector<int>, 2> set;
+        for (int i = 0; i < N; i++) if (l[i]) set[0].push_back(i);
+        for (int i = 0; i < M; i++) if (r[i]) set[1].push_back(i);
 
         return set;
     }
