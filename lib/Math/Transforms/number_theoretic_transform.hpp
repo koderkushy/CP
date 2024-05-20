@@ -1,7 +1,7 @@
 #ifndef CP_NTT_HPP
 #define CP_NTT_HPP
 
-#include "lib/Math/modular_integer.hpp"
+// needs mint
 
 namespace conv_ntt {
 

@@ -1,6 +1,6 @@
 <snippet>
 	<content><![CDATA[
-#include "lib/Math/Transforms/number_theoretic_transform.hpp"
+// needs ntt
 
 template<typename mint>
 class polynomial {

@@ -1,6 +1,6 @@
 <snippet>
 	<content><![CDATA[
-#include "lib/Math/modular_integer.hpp"
+// needs mint
 
 namespace conv_ntt {
 

@@ -12,4 +12,5 @@
 	    "gray_antialias"
 	],
 	"scroll_past_end": 0.65,
+	"index_files": true,
 }

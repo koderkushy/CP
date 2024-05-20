@@ -1,6 +1,6 @@
 <snippet>
 	<content><![CDATA[
-#include "lib/Geometry/point_2d.hpp"
+// needs point_2d
 
 namespace geom {
 

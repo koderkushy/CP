@@ -1,47 +1,44 @@
 #ifndef CP_TRIE_HPP
 #define CP_TRIE_HPP
 
-template<int M = 26>
+template<class string_type>
 class Trie {
 public:
 
-    // Hard code the alphabet
-    static constexpr std::array<char, M> alphabet = []() {
-        std::array<char, M> a{};
-        for (int i = 0; i < M; i++) a[i] = 'a' + i;
-        return a;
-    }();
+    using char__ =  typename std::remove_const<
+                        typename std::remove_reference<
+                            decltype(std::declval<string_type>().front())
+                        >::type
+                    >::type;
 
-    static constexpr std::array<int, 256> ord = []() {
-        std::array<int, 256> a{}; int o = 0;
-        for (int i = 0; i < M; i++) a[alphabet[i]] = o++;
-        return a;
-    }();
-
-    using node = std::array<int, M>;
+    using node = std::map<char__, int>;
 
     Trie () {}
-    Trie (const std::vector<string>& a) {
+    Trie (const std::vector<string_type>& a) {
         for (auto s: a) insert(s);
     }
 
-    void insert (const string& s) {
+    void insert (const string_type& s) {
         int u = 0;
-        for (char x: s) {
-            u = (a[u][ord[x]] ? a[u][ord[x]] : a[u][ord[x]] = push());
+        for (auto x: s) {
+            if (a[u].count(x))
+                u = a[u][x];
+            else
+                u = a[u][x] = push();
             c[u]++;
         }
     }
 
-    bool exists (const string& s) {
+    bool exists (const string_type& s) {
         return count(s);
     }
 
-    int count (const string& s) {
+    int count (const string_type& s) {
         int u = 0;
-        for (char& x: s) {
-            u = a[u][ord[x]];
-            if (!u or !c[u])
+        for (auto& x: s) {
+            if (a[u].count(x))
+                u = a[u][x];
+            else
                 return 0;
         }
         return c[u];

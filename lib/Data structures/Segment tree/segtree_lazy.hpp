@@ -1,35 +1,25 @@
 #ifndef CP_LAZY_SEGMENT_TREE_HPP
 #define CP_LAZY_SEGMENT_TREE_HPP
 
-template<class Node,
-         class Lazy,
-         class Calc,
-         class Comp,
-         class Map,
-         bool SafeMode = true>
+template<typename Node, typename Lazy>
 class LazySegtree {
 public:
     template<typename... T>
     explicit LazySegtree (const int n, const Node id, T... args) : LazySegtree(std::vector(n, id), args ...) {}
 
-    explicit LazySegtree (const std::vector<Node>& x,
-                       const Node id,
-                       const Lazy null,
-                       const Calc& F,
-                       const Comp& L,
-                       const Map& A)
-    : sz(x.size()), N(1 << 32 - __builtin_clz(std::max(1, sz - 1))), id(id), null(null), F(F), L(L), A(A) {
+    explicit LazySegtree (const std::vector<Node>& x, const Node id, const Lazy null)
+    : sz(x.size()), N(1 << 32 - __builtin_clz(std::max(1, sz - 1))), id(id), null(null) {
         a.resize(N << 1, id), b.resize(N, null);
         std::copy(x.begin(), x.end(), a.begin() + N);
         for (int i = N; --i; )
-            a[i] = F(a[i << 1], a[i << 1 | 1]);
+            a[i] = (a[i << 1] + a[i << 1 | 1]);
     }
 
     void set (int i, const Node x) {
         // assert(0 <= i and i < sz);
-        pull(i += N);
-        a[i] = x;
-        while (i >>= 1) a[i] = F(a[i << 1], a[i << 1 | 1]);
+        pull(i += N), a[i] = x;
+        while (i >>= 1)
+            a[i] = a[i << 1] + a[i << 1 | 1];
     }
 
     Node qu (int l, int r) {
@@ -42,10 +32,10 @@ public:
         
         Node x = id, y = id;
         for (; l < r; l >>= 1, r >>= 1) {
-            if (l & 1) x = F(x, a[l++]);
-            if (r & 1) y = F(a[--r], y);
+            if (l & 1) x = x + a[l++];
+            if (r & 1) y = a[--r] + y;
         }
-        return F(x, y);
+        return x + y;
     }
 
     void apply (int l, int r, const Lazy u) {
@@ -62,8 +52,8 @@ public:
         }
 
         l >>= lctz - opt, --r >>= rctz - opt;
-        while (l >>= 1) a[l] = F(a[l << 1], a[l << 1 | 1]);
-        while (r >>= 1) a[r] = F(a[r << 1], a[r << 1 | 1]);
+        while (l >>= 1) a[l] = a[l << 1] + a[l << 1 | 1];
+        while (r >>= 1) a[r] = a[r << 1] + a[r << 1 | 1];
     }
 
 private:
@@ -74,13 +64,9 @@ private:
     const int N;
     const Node id;
     const Lazy null;
-    const Calc F;
-    const Comp L;
-    const Map A;
-
 
     inline void apply_all (const int i, const Lazy u) {
-        a[i] = A(a[i], u); if(i < N) b[i] = L(b[i], u);
+        a[i] = u(a[i]); if(i < N) b[i] = (b[i] + u);
     }
 
     inline void push (const int i) {

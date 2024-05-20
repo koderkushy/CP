@@ -1,7 +1,7 @@
 #ifndef CP_POLYNOMIAL_HPP
 #define CP_POLYNOMIAL_HPP
 
-#include "lib/Math/Transforms/number_theoretic_transform.hpp"
+// needs ntt
 
 template<typename mint>
 class polynomial {

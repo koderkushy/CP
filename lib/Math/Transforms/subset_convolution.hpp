@@ -1,7 +1,7 @@
 #ifndef CP_SUBSET_CONVOLUTION_HPP
 #define CP_SUBSET_CONVOLUTION_HPP
 
-#include "lib/Math/Transforms/zeta_transform_aka_sos.hpp"
+// needs sos
 
 template<class mint>
 auto subset_conv (std::vector<mint>& a, const std::vector<mint>& b) {

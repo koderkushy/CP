@@ -1,7 +1,7 @@
 #ifndef CP_CONVEX_POLYGON_HPP
 #define CP_CONVEX_POLYGON_HPP
 
-#include "lib/Geometry/point_2d.hpp"
+// needs point_2d
 
 namespace geom {
 
