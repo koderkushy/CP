@@ -1,80 +1,64 @@
 #ifndef CP_TREE_LCA_HPP
 #define CP_TREE_LCA_HPP
 
-class TreeLca {
+class Lca {
+    template<typename T> using vec = std::vector<T>;
 public:
-
-    explicit TreeLca (const std::vector<std::vector<int>>& initial_adj,
-                  const int root):
-    N(initial_adj.size()),
-    root(root),
-    adj(initial_adj),
-    par(N, std::vector(1, root)),
-    in(N),
-    sub(N, 1),
-    depth(N),
-    log_max_depth((dfs(root), 32 - __builtin_clz(max(*std::max_element(depth.begin(), depth.end()) - 1, 0))))
+    Lca (const vec<vec<int>>& g, const int root = 0):
+        n(g.size()), d(n), in(n), sub(n, 1), par(1, vec(n, root))
     {
-        for (auto& v: par)
-            v.resize(log_max_depth + 1);
+        int t = 0;
+        auto dfs = [&](auto&& dfs, int u) -> void {
+            amax(LMD, d[u] - 1);
+            in[u] = t++;
+            
+            for (int v: g[u]) if (v != par[0][u]) {
+                par[0][v] = u;
+                d[v] = d[u] + 1;
+                dfs(dfs, v);
+                sub[u] += sub[v];
+            }
+        };
 
-        for (int j = 0; j < log_max_depth; ++j)
-            for (int i = 0; i < N; ++i)
-                par[i][j + 1] = par[par[i][j]][j];
+        dfs(dfs, root);
+        LMD = 32 - __builtin_clz(LMD);
+        par.resize(LMD + 1, vec(n, root));
+
+        for (int j = 0; j < LMD; ++j)
+            for (int i = 0; i < n; ++i)
+                par[j + 1][i] = par[j][par[j][i]];
     }
 
-    inline bool is_ancestor (const int u, const int v) const {
-        return in[u] <= in[v] and in[u] + sub[u] > in[v];
+    bool is_ancestor (int u, int of) const {
+        return in[u] <= in[of] and in[u] + sub[u] > in[of];
+    }
+
+    int ancestor (int u, int l) const {
+        amin(l, d[u]);
+        for (int i = 0; l; ++i, l /= 2)
+            if (l & 1) u = par[i][u];
+        return u;
+    }
+
+    int dist (int u, int v) const  {
+        return d[u] + d[v] - 2 * d[lca(u, v)];
     }
 
     int lca (int u, int v) const {
         if (is_ancestor(u, v)) return u;
         if (is_ancestor(v, u)) return v;
 
-        for (int j = log_max_depth; j > -1; --j) {
-            if (!is_ancestor(par[v][j], u))
-                v = par[v][j];
-        }
-
-        return par[v][0];
-    }    
-
-    int ancestor (int u, int l) const {
-        if (l >= depth[u])
-            return root;
-        
-        for (int i = 0; l; ++i, l >>= 1)
-            if (l & 1) u = par[u][i];
-
-        return u;
+        for (int j = LMD; j > -1; --j)
+            if (!is_ancestor(par[j][v], u))
+                v = par[j][v];
+        return par[0][v];
     }
 
-    int dist (const int u, const int v) const {
-        return depth[u] + depth[v] - 2 * depth[lca(u, v)];
-    }
-
-private:
-
-    const int N, root;
-    std::vector<std::vector<int>> adj, par;
-    std::vector<int> in, sub, depth;
-    const int log_max_depth;
-
-    void dfs (const int u, const int p = -1) {
-        static int time = 0;
-        in[u] = time++;
-
-        auto& V = adj[u];
-        if (auto j = std::find(V.begin(), V.end(), p); j != V.end())
-            std::swap(V.back(), *j), V.pop_back();
-
-        for (auto& v: V) {
-            par[v][0] = u,
-            depth[v] = depth[u] + 1,
-            dfs(v, u),
-            sub[u] += sub[v];
-        }
-    }
+protected:
+    const size_t n;
+    vec<int> d, in, sub;
+    vec<vec<int>> par;
+    int LMD = 1;
 };
 
 #endif // CP_TREE_LCA_HPP
